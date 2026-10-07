@@ -10,7 +10,7 @@ Copy these things into the catalog repository:
 | From here | To the catalog repository |
 |---|---|
 | `extensions/igz_tb_scenes.toml` | `extensions/igz_tb_scenes.toml` |
-| `screenshots/igz_tb_scenes.png` *(to be added)* | `screenshots/igz_tb_scenes.png` |
+| `screenshots/igz_tb_scenes.png` | `screenshots/igz_tb_scenes.png` |
 
 Then open the pull request (browser: *Add file ▸ Create new file* and *Add
 file ▸ Upload files* → **Propose changes** → **Create pull request**) and fill
