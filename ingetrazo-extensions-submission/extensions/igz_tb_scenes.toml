@@ -22,9 +22,9 @@ tags = ["rendering", "productivity"]
 screenshot = "igz_tb_scenes.png"
 
 [name]
-es = "Ark-Z Escenas (gestor de escenas)"
-en = "Ark-Z Scenes (scene manager)"
-pt = "Ark-Z Cenas (gerenciador de cenas)"
+es = "Escenas (gestor de escenas)"
+en = "Scenes (scene manager)"
+pt = "Cenas (gerenciador de cenas)"
 
 [summary]
 es = "Barra y panel lateral para guardar la cámara como «escenas», reproducirlas como una animación suave y exportarlas a PNG o MP4 (FFmpeg opcional)."

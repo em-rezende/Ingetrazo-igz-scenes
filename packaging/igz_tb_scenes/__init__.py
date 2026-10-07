@@ -21,7 +21,7 @@
 # Date: 2026-10-07
 # License: GPL-3.0-or-later (same as IngeTrazo)
 #
-# IngeTrazo — "Ark-Z Scenes" toolbar + side panel. A camera-scene manager:
+# IngeTrazo — "Scenes" toolbar + side panel. A camera-scene manager:
 # it saves camera keyframes (eye / target / fov) with per-scene timing,
 # plays them as a smooth animation and exports it as a PNG sequence or an
 # MP4 video.

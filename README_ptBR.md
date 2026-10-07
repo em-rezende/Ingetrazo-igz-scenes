@@ -1,4 +1,4 @@
-# Extensão IngeTrazo — "Ark-Z Scenes" (Gerenciador de Cenas)
+# Extensão IngeTrazo — "Scenes" (Gerenciador de Cenas)
 
 Uma **barra de ferramentas** e um **painel lateral** para o
 [IngeTrazo](https://github.com/ingelibre/ingetrazo) que transformam posições
@@ -277,7 +277,7 @@ para mais detalhes.
 
 | Seção | Inglês | Português |
 |---|---|---|
-| Título | Extensions — "Ark-Z Scenes" (Scene Manager) | Extensão — "Ark-Z Scenes" (Gerenciador de Cenas) |
+| Título | Extensions — "Scenes" (Scene Manager) | Extensão — "Scenes" (Gerenciador de Cenas) |
 | Arquivos | Files | Arquivos |
 | Barra | The "Scenes" Toolbar | A barra "Scenes" |
 | Painel | The "Cenas" Side Panel | O painel lateral "Cenas" |

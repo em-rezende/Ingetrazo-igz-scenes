@@ -1,5 +1,5 @@
 # =========================================================================
-# Extension: igz_tb_scenes — Ark-Z Gerenciador de Cenas (Scenes)
+# Extension: igz_tb_scenes — Gerenciador de Cenas (Scenes)
 # Author: Ezequiel M Rezende
 # Version: 1.0.0
 # License: GPL-3.0-or-later (same as IngeTrazo)
@@ -163,9 +163,9 @@ def _current_smooth(combo):
 # --- Frases da interface (chave = string-fonte em inglês) ---
 _TEXTS["pt-BR"].update({
     # Títulos de janelas / diálogos
-    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Tempos e Quadros",
-    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Exportar Animação",
-    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Dependências de Vídeo",
+    "Scenes - Timings and Frames": "Scenes - Tempos e Quadros",
+    "Scenes - Export Animation": "Scenes - Exportar Animação",
+    "Scenes - Video Dependencies": "Scenes - Dependências de Vídeo",
     # Diálogo de tempos e quadros
     "Frames per second (FPS):": "Quadros por segundo (FPS):",
     "Camera interpolation:": "Interpolação da câmera:",
@@ -290,9 +290,9 @@ _TEXTS["pt-BR"].update({
 
 _TEXTS["es"].update({
     # Títulos de ventanas / diálogos
-    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Tiempos y Fotogramas",
-    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Exportar Animación",
-    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Dependencias de Vídeo",
+    "Scenes - Timings and Frames": "Scenes - Tiempos y Fotogramas",
+    "Scenes - Export Animation": "Scenes - Exportar Animación",
+    "Scenes - Video Dependencies": "Scenes - Dependencias de Vídeo",
     # Diálogo de tiempos y fotogramas
     "Frames per second (FPS):": "Fotogramas por segundo (FPS):",
     "Camera interpolation:": "Interpolación de la cámara:",
@@ -417,9 +417,9 @@ _TEXTS["es"].update({
 
 _TEXTS["it"].update({
     # Titoli finestre / dialoghi
-    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Tempi e Fotogrammi",
-    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Esporta Animazione",
-    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Dipendenze Video",
+    "Scenes - Timings and Frames": "Scenes - Tempi e Fotogrammi",
+    "Scenes - Export Animation": "Scenes - Esporta Animazione",
+    "Scenes - Video Dependencies": "Scenes - Dipendenze Video",
     # Dialogo tempi e fotogrammi
     "Frames per second (FPS):": "Fotogrammi al secondo (FPS):",
     "Camera interpolation:": "Interpolazione della camera:",
@@ -544,9 +544,9 @@ _TEXTS["it"].update({
 
 _TEXTS["de"].update({
     # Fenstertitel / Dialoge
-    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Zeiten und Bilder",
-    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Animation exportieren",
-    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Video-Abhängigkeiten",
+    "Scenes - Timings and Frames": "Scenes - Zeiten und Bilder",
+    "Scenes - Export Animation": "Scenes - Animation exportieren",
+    "Scenes - Video Dependencies": "Scenes - Video-Abhängigkeiten",
     # Dialog Zeiten und Bilder
     "Frames per second (FPS):": "Bilder pro Sekunde (FPS):",
     "Camera interpolation:": "Kamera-Interpolation:",
@@ -978,7 +978,7 @@ class DependencyDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(_t("Ark-Z Scenes - Video Dependencies"))
+        self.setWindowTitle(_t("Scenes - Video Dependencies"))
         self.resize(580, 440)
         self._dl_thread = None
 
@@ -1275,7 +1275,7 @@ class SceneSequenceAnimation:
 class ScenesConfigDialog(QDialog):
     def __init__(self, controller, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(_t("Ark-Z Scenes - Timings and Frames"))
+        self.setWindowTitle(_t("Scenes - Timings and Frames"))
         self.controller = controller
 
         layout = QVBoxLayout(self)
@@ -1366,7 +1366,7 @@ class ScenesConfigDialog(QDialog):
 class ScenesExportDialog(QDialog):
     def __init__(self, controller, parent=None, modo_inicial=None):
         super().__init__(parent)
-        self.setWindowTitle(_t("Ark-Z Scenes - Export Animation"))
+        self.setWindowTitle(_t("Scenes - Export Animation"))
         self.controller = controller
 
         layout = QFormLayout(self)
@@ -1628,7 +1628,7 @@ class ScenesController:
     def remover_cena_selecionada(self):
         if not self.cenas:
             QMessageBox.information(
-                self.main_window, "Ark-Z Scenes",
+                self.main_window, "Scenes",
                 _t("There are no scenes to remove.")
             )
             return
@@ -1651,7 +1651,7 @@ class ScenesController:
         if not self.cenas:
             return
         resp = QMessageBox.question(
-            self.main_window, "Ark-Z Scenes",
+            self.main_window, "Scenes",
             _t("Remove ALL {n} scenes?", n=len(self.cenas)),
             QMessageBox.Yes | QMessageBox.No,
         )
@@ -1665,7 +1665,7 @@ class ScenesController:
 
     def _escolher_cena(self, titulo):
         dlg = QDialog(self.main_window)
-        dlg.setWindowTitle("Ark-Z Scenes")
+        dlg.setWindowTitle("Scenes")
         lay = QVBoxLayout(dlg)
         lay.addWidget(QLabel(titulo))
         lista = QListWidget(dlg)
@@ -1832,13 +1832,13 @@ class ScenesController:
     def tocar_animacao(self):
         if len(self.cenas) < 1:
             QMessageBox.information(
-                self.main_window, "Ark-Z Scenes",
+                self.main_window, "Scenes",
                 _t("Add at least one scene (2 or more recommended)."),
             )
             return
         if self.viewport is None:
             QMessageBox.warning(
-                self.main_window, "Ark-Z Scenes",
+                self.main_window, "Scenes",
                 _t("Viewport not found.")
             )
             return
@@ -1872,7 +1872,7 @@ class ScenesController:
                 return "ffmpeg"
 
             box = QMessageBox(self.main_window)
-            box.setWindowTitle("Ark-Z Scenes")
+            box.setWindowTitle("Scenes")
             box.setIcon(QMessageBox.Information)
             box.setText(_t("FFmpeg was not found."))
             box.setInformativeText(
@@ -1901,13 +1901,13 @@ class ScenesController:
     def exportar_animacao(self, modo=None):
         if not self.cenas:
             QMessageBox.information(
-                self.main_window, "Ark-Z Scenes",
+                self.main_window, "Scenes",
                 _t("There are no scenes to export."),
             )
             return
         if self.viewport is None:
             QMessageBox.warning(
-                self.main_window, "Ark-Z Scenes",
+                self.main_window, "Scenes",
                 _t("Viewport not found.")
             )
             return
@@ -2047,14 +2047,14 @@ class ScenesController:
                 shutil.rmtree(tmp_frames, ignore_errors=True)
             elif not resultado and tmp_frames:
                 QMessageBox.warning(
-                    self.main_window, "Ark-Z Scenes",
+                    self.main_window, "Scenes",
                     _t("Could not generate the MP4 video.\n"
                        "The PNG frames were kept in:\n") + tmp_frames,
                 )
 
         dest = resultado or (out_file if backend == "ffmpeg" else out_dir)
         QMessageBox.information(
-            self.main_window, "Ark-Z Scenes",
+            self.main_window, "Scenes",
             _t("Export finished: {n} frames.", n=gravados)
             + (f"\n{dest}" if dest else ""),
         )
@@ -2084,7 +2084,7 @@ class ScenesController:
             _log("FFmpeg falhou (rc=%s): %s" % (
                 proc.returncode, (proc.stdout or "")[-800:]))
         QMessageBox.warning(
-            self.main_window, "Ark-Z Scenes",
+            self.main_window, "Scenes",
             "Falha ao executar o FFmpeg. Os frames PNG foram mantidos "
             "em:\n" + png_dir,
         )
@@ -2123,7 +2123,7 @@ class ScenesPanel(QWidget):
         root = QVBoxLayout(inner)
         root.setContentsMargins(8, 8, 8, 8)
 
-        root.addWidget(QLabel("<b>Ark-Z Scenes</b>"))
+        root.addWidget(QLabel("<b>Scenes</b>"))
         nota = QLabel(
             "<i>" + _t("Scenes are saved inside the project's .igz file.")
             + "</i>"

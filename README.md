@@ -1,4 +1,4 @@
-# IngeTrazo Extension — "Ark-Z Scenes" (Scene Manager)
+# IngeTrazo Extension — "Scenes" (Scene Manager)
 
 A **toolbar** and a **side panel** for [IngeTrazo](https://github.com/ingelibre/ingetrazo)
 that turn camera positions into an ordered list of **scenes** (camera
