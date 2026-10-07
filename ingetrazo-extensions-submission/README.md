@@ -1,22 +1,20 @@
 # Submission bundle — IngeTrazo extension catalog
 
 > **Submission bundle for the IngeTrazo extension catalog** (v1.0.0). These
-> are the files to copy into a pull request of
-> <https://github.com/ingelibre/ingetrazo-extensions> to publish the
-> extension.
+> are the files submitted in the catalog pull request
+> <https://github.com/ingelibre/ingetrazo-extensions/pull/55>.
 
-Copy these things into the catalog repository:
+The files below go into the catalog repository:
 
 | From here | To the catalog repository |
 |---|---|
 | `extensions/igz_tb_scenes.toml` | `extensions/igz_tb_scenes.toml` |
 | `screenshots/igz_tb_scenes.png` | `screenshots/igz_tb_scenes.png` |
 
-Then open the pull request (browser: *Add file ▸ Create new file* and *Add
-file ▸ Upload files* → **Propose changes** → **Create pull request**) and fill
-in the template checklist.
+The pull request (<https://github.com/ingelibre/ingetrazo-extensions/pull/55>)
+was opened with the template checklist filled in.
 
-## Before you submit
+## Preconditions (all met)
 
 - The `download` URL points at the **v1.0.0** GitHub Release asset
   `igz_tb_scenes.zip`, so create that tag/release in this repository first and

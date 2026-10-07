@@ -1,7 +1,9 @@
 # Publicar no catálogo de Extensões do IngeTrazo
 
-> **Status: v1.0.0 preparada, ainda NÃO publicada.** Este guia descreve os
-> passos para publicar esta extensão no catálogo.
+> **Status: v1.0.0 publicada.** O `.zip` foi reconstruído, a Release `v1.0.0`
+> (com o asset `igz_tb_scenes.zip`) foi criada e o pull request
+> <https://github.com/ingelibre/ingetrazo-extensions/pull/55> foi aberto no
+> catálogo. Este guia descreve os passos seguidos.
 
 Este documento (PT) e a seção em inglês mais abaixo descrevem como publicar
 esta extensão no catálogo <https://github.com/ingelibre/ingetrazo-extensions>
@@ -18,7 +20,7 @@ esta extensão no catálogo <https://github.com/ingelibre/ingetrazo-extensions>
 | Ponto de entrada do pacote | `packaging/igz_tb_scenes/__init__.py` | Define `setup(app)` e carrega o `igz_tb_scenes.py` por caminho de arquivo. |
 | Artefato | `dist/igz_tb_scenes.zip` | Gerado pelo script; ele imprime o `sha256`. |
 | Ficha do catálogo | `ingetrazo-extensions-submission/extensions/igz_tb_scenes.toml` | Copiar para `extensions/igz_tb_scenes.toml` no repositório do catálogo. |
-| Captura de tela | `ingetrazo-extensions-submission/screenshots/igz_tb_scenes.png` | **A adicionar** antes da publicação. |
+| Captura de tela | `ingetrazo-extensions-submission/screenshots/igz_tb_scenes.png` | Enviada no pull request do catálogo (PR #55). |
 
 O `.zip` contém exatamente uma pasta de topo:
 
@@ -102,12 +104,13 @@ usa o formato `.zip`.
 
 # Publishing to the IngeTrazo extension catalog (EN)
 
-> **Status: v1.0.0 prepared, not yet published.** This guide covers the
-> publication steps.
+> **Status: v1.0.0 published.** The `.zip` was rebuilt, the `v1.0.0` Release
+> (asset `igz_tb_scenes.zip`) was created and the pull request
+> <https://github.com/ingelibre/ingetrazo-extensions/pull/55> was opened in the
+> catalog. This guide covers the steps taken.
 
 Everything needed is in place (code, a `.zip` builder, the package entry, the
-catalog entry and a screenshot placeholder). To publish, once you authorise
-it:
+catalog entry and a screenshot). These steps were taken:
 
 1. Commit locally (`git add -A; git commit -m "chore: prepare 1.0.0 ..."`).
 2. (Only if the code changed) rebuild: `packaging\build_extension.ps1` and
