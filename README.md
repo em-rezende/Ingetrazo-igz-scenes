@@ -13,7 +13,7 @@ the result as a PNG image sequence or an MP4 video.
 
 ---
 
-![IngeTrazo with the "Scenes" toolbar and side panel on screen](screenshots/igz-tb-scenes-main.png)
+![IngeTrazo with the "Scenes" toolbar and side panel on screen](screenshots/igz-tb-scenes.png)
 
 *The **Scenes** toolbar and the **Cenas** side panel. (Screenshot to be added
 before publishing.)*

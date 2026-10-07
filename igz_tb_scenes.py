@@ -83,6 +83,596 @@ _EPS = 1e-8
 
 
 # =========================================================================
+# INTERNACIONALIZAÇÃO (i18n) — idioma-fonte: inglês (en-US)
+# Usa o ``core.i18n`` do IngeTrazo quando disponível; fora dele, cai para as
+# traduções locais em ``_TEXTS``. As chaves são as strings-fonte em inglês.
+# =========================================================================
+try:
+    from core.i18n import tr as _tr_i18n
+    from core.i18n import current_language as _current_language
+except Exception:  # rodando fora do IngeTrazo: cai para o inglês
+    def _tr_i18n(s, **kw):
+        return s.format(**kw) if kw else s
+
+    def _current_language():
+        return "en"
+
+
+#: Traduções desta extensão (chave = string-fonte em inglês).
+_TEXTS = {"pt-BR": {}, "es": {}, "it": {}, "de": {}}
+
+
+def _lang_key():
+    """Idioma atual (ex.: 'pt-BR'); tolera variantes como 'pt_BR'/'pt'."""
+    try:
+        lang = str(_current_language() or "en").strip().replace("_", "-")
+    except Exception:
+        return "en"
+    if lang in _TEXTS:
+        return lang
+    base = lang.split("-")[0].lower()
+    for key in _TEXTS:
+        if key.lower().split("-")[0] == base:
+            return key
+    return lang
+
+
+def _t(text, **kw):
+    """Devolve ``text`` (fonte em inglês) no idioma atual da interface."""
+    try:
+        x = _tr_i18n(text)
+        if isinstance(x, str) and x != text:
+            return x.format(**kw) if kw else x
+    except Exception:
+        pass
+    out = _TEXTS.get(_lang_key(), {}).get(text, text)
+    return out.format(**kw) if kw else out
+
+
+#: Valores canônicos de suavização (nunca traduzidos; só o rótulo é).
+_SMOOTH_KEYS = ("Smooth", "Linear", "Catmull-Rom")
+
+
+def _norm_smooth(value):
+    v = str(value or "").strip()
+    low = v.lower()
+    if low in ("", "suave", "smooth"):
+        return "Smooth"
+    if low == "linear":
+        return "Linear"
+    if low in ("catmull-rom", "catmull_rom", "catmullrom"):
+        return "Catmull-Rom"
+    return v or "Smooth"
+
+
+def _fill_smooth_combo(combo, current):
+    """Preenche um QComboBox com os modos de suavização (rótulo traduzido)."""
+    combo.clear()
+    for key in _SMOOTH_KEYS:
+        combo.addItem(_t(key), key)
+    idx = combo.findData(_norm_smooth(current))
+    combo.setCurrentIndex(idx if idx >= 0 else 0)
+
+
+def _current_smooth(combo):
+    """Valor canônico selecionado no combo de suavização."""
+    data = combo.currentData()
+    return str(data) if data is not None else _norm_smooth(combo.currentText())
+
+
+# --- Frases da interface (chave = string-fonte em inglês) ---
+_TEXTS["pt-BR"].update({
+    # Títulos de janelas / diálogos
+    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Tempos e Quadros",
+    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Exportar Animação",
+    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Dependências de Vídeo",
+    # Diálogo de tempos e quadros
+    "Frames per second (FPS):": "Quadros por segundo (FPS):",
+    "Camera interpolation:": "Interpolação da câmera:",
+    "Loop?": "Repetir em loop?",
+    "Default transition:": "Transição padrão:",
+    "Default hold:": "Permanência padrão:",
+    "Scene timings (edit columns 2 and 3):": "Tempos por cena (edite as colunas 2 e 3):",
+    "Hold (s)": "Permanência (s)",
+    "Transition (s)": "Transição (s)",
+    # Suavização / Sim-Não
+    "Smooth": "Suave",
+    "Linear": "Linear",
+    "Yes": "Sim",
+    "No": "Não",
+    # Diálogo de exportação
+    "PNG image sequence": "Sequência de Imagens PNG",
+    "MP4 video": "Vídeo MP4",
+    "Output format:": "Formato de saída:",
+    "W": "L",
+    "x  H": "x  A",
+    "Size (W × H):": "Tamanho (L x A):",
+    "Keep screen aspect ratio": "Manter proporção da tela",
+    "Current screen size": "Tamanho da tela atual",
+    "Summary:": "Resumo:",
+    "{n} scene(s) - {total:.2f}s - ~{frames} frames - {w}x{h} px": "{n} cena(s) - {total:.2f}s - ~{frames} frames - {w}x{h} px",
+    # Exportação
+    "There are no scenes to export.": "Não há cenas para exportar.",
+    "Viewport not found.": "Viewport não encontrada.",
+    "Folder to save the PNG images": "Pasta para salvar as imagens PNG",
+    "Save MP4 video": "Salvar vídeo MP4",
+    "animation.mp4": "animacao.mp4",
+    "MP4 video (*.mp4)": "Vídeo MP4 (*.mp4)",
+    "FFmpeg was not found.": "O FFmpeg não foi encontrado.",
+    "Do you want to configure/download FFmpeg now?\nOtherwise, the animation will be exported as a PNG image sequence.": "Deseja configurar/baixar o FFmpeg agora?\nSe preferir, a animação será exportada como sequência de imagens PNG.",
+    "Configure / Download...": "Configurar / Baixar...",
+    "Export PNG": "Exportar PNG",
+    "Cancel": "Cancelar",
+    "Could not generate the MP4 video.\nThe PNG frames were kept in:\n": "Não foi possível gerar o vídeo MP4.\nOs frames PNG foram mantidos em:\n",
+    "Export finished: {n} frames.": "Exportação concluída: {n} frames.",
+    "Failed to run FFmpeg. The PNG frames were kept in:\n": "Falha ao executar o FFmpeg. Os frames PNG foram mantidos em:\n",
+    # Controlador
+    "There are no scenes to remove.": "Não há cenas para remover.",
+    "Choose the scene to remove:": "Escolha a cena a remover:",
+    "{name} removed.": "{name} removida.",
+    "Remove ALL {n} scenes?": "Remover TODAS as {n} cenas?",
+    "All scenes were removed.": "Todas as cenas foram removidas.",
+    "Add at least one scene (2 or more recommended).": "Adicione pelo menos uma cena (recomendado: 2 ou mais).",
+    "Playing scene animation...": "Reproduzindo animação de cenas...",
+    "Timing and frame settings updated.": "Configuração de tempos e quadros atualizada.",
+    "Scene": "Cena",
+    "Scene {n}": "Cena {n}",
+    "{name} added (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).": "{name} adicionada (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).",
+})
+
+
+_TEXTS["pt-BR"].update({
+    # Painel lateral
+    "Scenes": "Cenas",
+    "Scenes are saved inside the project's .igz file.": "As cenas são salvas dentro do arquivo .igz do projeto.",
+    "Add": "Adicionar",
+    "Remove": "Remover",
+    "Clear": "Limpar",
+    "Playback": "Reprodução",
+    "Play": "Tocar",
+    "Stop": "Parar",
+    "Loop": "Repetir em loop",
+    "Timings and Frames": "Tempos e Quadros",
+    "Interpolation:": "Interpolação:",
+    "Apply settings": "Aplicar configuração",
+    "Export": "Exportação",
+    "Export Animation": "Exportar Animação",
+    "Video Dependencies": "Dependências de Vídeo",
+    "Settings applied.": "Configuração aplicada.",
+    "{n} scene(s) — {total:.2f}s — ~{frames} frames": "{n} cena(s) — {total:.2f}s — ~{frames} frames",
+    "available": "disponível",
+    "missing": "ausente",
+    # Dependências de vídeo
+    "MP4 export uses <b>FFmpeg</b>.\nCheck the status below and download it if it is missing.": "A exportação para MP4 usa o <b>FFmpeg</b>.\nVerifique o estado abaixo e baixe-o se estiver ausente.",
+    "Download FFmpeg": "Baixar FFmpeg",
+    "Downloads and extracts FFmpeg (~90 MB) to the plugin's local folder.": "Baixa e extrai o FFmpeg (~90 MB) para a pasta local do plugin.",
+    "Browse...": "Procurar...",
+    "Select an already installed ffmpeg(.exe).": "Selecionar um ffmpeg(.exe) já instalado.",
+    "Refresh status": "Atualizar status",
+    "Open folder": "Abrir pasta",
+    "MISSING": "AUSENTE",
+    "absent": "ausente",
+    "Downloading FFmpeg... (may take a while / ~90 MB)": "Baixando FFmpeg... (pode demorar / ~90 MB)",
+    "FFmpeg ready at: {path}": "FFmpeg pronto em: {path}",
+    "FFmpeg failure: {msg}": "Falha no FFmpeg: {msg}",
+    "Select the ffmpeg executable": "Selecione o executável ffmpeg",
+    "All files (*.*)": "Todos os arquivos (*.*)",
+    "FFmpeg set: {path}": "FFmpeg configurado: {path}",
+    "Dependencies folder: {path}": "Pasta de dependências: {path}",
+    # Downloader (FFmpeg)
+    "canceled by user": "cancelado pelo usuário",
+    "Downloading FFmpeg...": "Baixando FFmpeg...",
+    "Canceled.": "Cancelado.",
+    "Downloading from {host}...": "Baixando de {host}...",
+    "Extracting...": "Extraindo...",
+    "{url}: ffmpeg.exe not found in the package": "{url}: ffmpeg.exe não encontrado no pacote",
+    "Download failed.": "Falha no download.",
+    # Barra de ferramentas
+    "Add Current Scene": "Adicionar Cena Atual",
+    "Captures the current camera's eye, target and fov as a new scene.": "Captura eye, target e fov da câmera atual como uma nova cena.",
+    "Remove Selected Scene": "Remover Cena Selecionada",
+    "Removes the currently selected scene from the list.": "Remove a cena atualmente selecionada da lista.",
+    "Clear Scenes": "Limpar Cenas",
+    "Removes ALL scenes from the list.": "Remove TODAS as cenas da lista.",
+    "Play Scene Animation": "Tocar Animação de Cenas",
+    "Smoothly plays through the scenes stored in the viewport.": "Percorre suavemente as cenas armazenadas na viewport.",
+    "Stop Animation": "Parar Animação",
+    "Stops the running scene animation.": "Interrompe a animação de cenas em execução.",
+    "Configure Timings and Frames": "Configurar Tempos e Quadros",
+    "Configures FPS, interpolation, loop and per-scene timings.": "Configura FPS, interpolação, loop e os tempos por cena.",
+    "Exports the animation as a PNG sequence or MP4 video.": "Exporta a animação como sequência PNG ou vídeo MP4.",
+    "Configure/download FFmpeg to export MP4.": "Configurar/baixar o FFmpeg para exportar MP4.",
+    "Scenes Panel": "Painel de Cenas",
+    "Show/hide the scenes panel.": "Mostrar/ocultar o painel de cenas.",
+    "Go to the scenes tab.": "Ir para a aba de cenas.",
+})
+
+
+_TEXTS["es"].update({
+    # Títulos de ventanas / diálogos
+    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Tiempos y Fotogramas",
+    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Exportar Animación",
+    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Dependencias de Vídeo",
+    # Diálogo de tiempos y fotogramas
+    "Frames per second (FPS):": "Fotogramas por segundo (FPS):",
+    "Camera interpolation:": "Interpolación de la cámara:",
+    "Loop?": "¿Repetir en bucle?",
+    "Default transition:": "Transición predeterminada:",
+    "Default hold:": "Permanencia predeterminada:",
+    "Scene timings (edit columns 2 and 3):": "Tiempos por escena (edite las columnas 2 y 3):",
+    "Hold (s)": "Permanencia (s)",
+    "Transition (s)": "Transición (s)",
+    # Suavizado / Sí-No
+    "Smooth": "Suave",
+    "Linear": "Lineal",
+    "Yes": "Sí",
+    "No": "No",
+    # Diálogo de exportación
+    "PNG image sequence": "Secuencia de imágenes PNG",
+    "MP4 video": "Vídeo MP4",
+    "Output format:": "Formato de salida:",
+    "W": "A",
+    "x  H": "x  H",
+    "Size (W × H):": "Tamaño (A × H):",
+    "Keep screen aspect ratio": "Mantener relación de aspecto de la pantalla",
+    "Current screen size": "Tamaño de pantalla actual",
+    "Summary:": "Resumen:",
+    "{n} scene(s) - {total:.2f}s - ~{frames} frames - {w}x{h} px": "{n} escena(s) - {total:.2f}s - ~{frames} fotogramas - {w}x{h} px",
+    # Exportación
+    "There are no scenes to export.": "No hay escenas para exportar.",
+    "Viewport not found.": "No se encontró el viewport.",
+    "Folder to save the PNG images": "Carpeta para guardar las imágenes PNG",
+    "Save MP4 video": "Guardar vídeo MP4",
+    "animation.mp4": "animacion.mp4",
+    "MP4 video (*.mp4)": "Vídeo MP4 (*.mp4)",
+    "FFmpeg was not found.": "No se encontró FFmpeg.",
+    "Do you want to configure/download FFmpeg now?\nOtherwise, the animation will be exported as a PNG image sequence.": "¿Desea configurar/descargar FFmpeg ahora?\nSi lo prefiere, la animación se exportará como una secuencia de imágenes PNG.",
+    "Configure / Download...": "Configurar / Descargar...",
+    "Export PNG": "Exportar PNG",
+    "Cancel": "Cancelar",
+    "Could not generate the MP4 video.\nThe PNG frames were kept in:\n": "No se pudo generar el vídeo MP4.\nLos fotogramas PNG se guardaron en:\n",
+    "Export finished: {n} frames.": "Exportación finalizada: {n} fotogramas.",
+    "Failed to run FFmpeg. The PNG frames were kept in:\n": "Error al ejecutar FFmpeg. Los fotogramas PNG se guardaron en:\n",
+    # Controlador
+    "There are no scenes to remove.": "No hay escenas para eliminar.",
+    "Choose the scene to remove:": "Elija la escena a eliminar:",
+    "{name} removed.": "{name} eliminada.",
+    "Remove ALL {n} scenes?": "¿Eliminar TODAS las {n} escenas?",
+    "All scenes were removed.": "Se eliminaron todas las escenas.",
+    "Add at least one scene (2 or more recommended).": "Añada al menos una escena (recomendado: 2 o más).",
+    "Playing scene animation...": "Reproduciendo la animación de escenas...",
+    "Timing and frame settings updated.": "Configuración de tiempos y fotogramas actualizada.",
+    "Scene": "Escena",
+    "Scene {n}": "Escena {n}",
+    "{name} added (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).": "{name} añadida (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).",
+})
+
+
+_TEXTS["es"].update({
+    # Panel lateral
+    "Scenes": "Escenas",
+    "Scenes are saved inside the project's .igz file.": "Las escenas se guardan dentro del archivo .igz del proyecto.",
+    "Add": "Añadir",
+    "Remove": "Eliminar",
+    "Clear": "Limpiar",
+    "Playback": "Reproducción",
+    "Play": "Reproducir",
+    "Stop": "Detener",
+    "Loop": "Repetir en bucle",
+    "Timings and Frames": "Tiempos y Fotogramas",
+    "Interpolation:": "Interpolación:",
+    "Apply settings": "Aplicar configuración",
+    "Export": "Exportación",
+    "Export Animation": "Exportar Animación",
+    "Video Dependencies": "Dependencias de vídeo",
+    "Settings applied.": "Configuración aplicada.",
+    "{n} scene(s) — {total:.2f}s — ~{frames} frames": "{n} escena(s) — {total:.2f}s — ~{frames} fotogramas",
+    "available": "disponible",
+    "missing": "ausente",
+    # Dependencias de vídeo
+    "MP4 export uses <b>FFmpeg</b>.\nCheck the status below and download it if it is missing.": "La exportación a MP4 usa <b>FFmpeg</b>.\nCompruebe el estado a continuación y descárguelo si falta.",
+    "Download FFmpeg": "Descargar FFmpeg",
+    "Downloads and extracts FFmpeg (~90 MB) to the plugin's local folder.": "Descarga y extrae FFmpeg (~90 MB) en la carpeta local del plugin.",
+    "Browse...": "Examinar...",
+    "Select an already installed ffmpeg(.exe).": "Seleccionar un ffmpeg(.exe) ya instalado.",
+    "Refresh status": "Actualizar estado",
+    "Open folder": "Abrir carpeta",
+    "MISSING": "AUSENTE",
+    "absent": "ausente",
+    "Downloading FFmpeg... (may take a while / ~90 MB)": "Descargando FFmpeg... (puede tardar / ~90 MB)",
+    "FFmpeg ready at: {path}": "FFmpeg listo en: {path}",
+    "FFmpeg failure: {msg}": "Error de FFmpeg: {msg}",
+    "Select the ffmpeg executable": "Seleccione el ejecutable ffmpeg",
+    "All files (*.*)": "Todos los archivos (*.*)",
+    "FFmpeg set: {path}": "FFmpeg configurado: {path}",
+    "Dependencies folder: {path}": "Carpeta de dependencias: {path}",
+    # Descargador (FFmpeg)
+    "canceled by user": "cancelado por el usuario",
+    "Downloading FFmpeg...": "Descargando FFmpeg...",
+    "Canceled.": "Cancelado.",
+    "Downloading from {host}...": "Descargando desde {host}...",
+    "Extracting...": "Extrayendo...",
+    "{url}: ffmpeg.exe not found in the package": "{url}: no se encontró ffmpeg.exe en el paquete",
+    "Download failed.": "Error en la descarga.",
+    # Barra de herramientas
+    "Add Current Scene": "Añadir escena actual",
+    "Captures the current camera's eye, target and fov as a new scene.": "Captura el eye, target y fov de la cámara actual como una nueva escena.",
+    "Remove Selected Scene": "Eliminar escena seleccionada",
+    "Removes the currently selected scene from the list.": "Elimina de la lista la escena seleccionada actualmente.",
+    "Clear Scenes": "Limpiar escenas",
+    "Removes ALL scenes from the list.": "Elimina TODAS las escenas de la lista.",
+    "Play Scene Animation": "Reproducir animación de escenas",
+    "Smoothly plays through the scenes stored in the viewport.": "Recorre suavemente las escenas almacenadas en el viewport.",
+    "Stop Animation": "Detener animación",
+    "Stops the running scene animation.": "Detiene la animación de escenas en ejecución.",
+    "Configure Timings and Frames": "Configurar tiempos y fotogramas",
+    "Configures FPS, interpolation, loop and per-scene timings.": "Configura FPS, interpolación, bucle y los tiempos por escena.",
+    "Exports the animation as a PNG sequence or MP4 video.": "Exporta la animación como secuencia PNG o vídeo MP4.",
+    "Configure/download FFmpeg to export MP4.": "Configurar/descargar FFmpeg para exportar MP4.",
+    "Scenes Panel": "Panel de escenas",
+    "Show/hide the scenes panel.": "Mostrar/ocultar el panel de escenas.",
+    "Go to the scenes tab.": "Ir a la pestaña de escenas.",
+})
+
+
+_TEXTS["it"].update({
+    # Titoli finestre / dialoghi
+    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Tempi e Fotogrammi",
+    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Esporta Animazione",
+    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Dipendenze Video",
+    # Dialogo tempi e fotogrammi
+    "Frames per second (FPS):": "Fotogrammi al secondo (FPS):",
+    "Camera interpolation:": "Interpolazione della camera:",
+    "Loop?": "Ripetere in loop?",
+    "Default transition:": "Transizione predefinita:",
+    "Default hold:": "Permanenza predefinita:",
+    "Scene timings (edit columns 2 and 3):": "Tempi per scena (modifica le colonne 2 e 3):",
+    "Hold (s)": "Permanenza (s)",
+    "Transition (s)": "Transizione (s)",
+    # Levigatezza / Sì-No
+    "Smooth": "Fluido",
+    "Linear": "Lineare",
+    "Yes": "Sì",
+    "No": "No",
+    # Dialogo esportazione
+    "PNG image sequence": "Sequenza di immagini PNG",
+    "MP4 video": "Video MP4",
+    "Output format:": "Formato di output:",
+    "W": "L",
+    "x  H": "x  H",
+    "Size (W × H):": "Dimensione (L × H):",
+    "Keep screen aspect ratio": "Mantieni le proporzioni dello schermo",
+    "Current screen size": "Dimensioni schermo attuali",
+    "Summary:": "Riepilogo:",
+    "{n} scene(s) - {total:.2f}s - ~{frames} frames - {w}x{h} px": "{n} scena/e - {total:.2f}s - ~{frames} fotogrammi - {w}x{h} px",
+    # Esportazione
+    "There are no scenes to export.": "Non ci sono scene da esportare.",
+    "Viewport not found.": "Viewport non trovato.",
+    "Folder to save the PNG images": "Cartella dove salvare le immagini PNG",
+    "Save MP4 video": "Salva video MP4",
+    "animation.mp4": "animazione.mp4",
+    "MP4 video (*.mp4)": "Video MP4 (*.mp4)",
+    "FFmpeg was not found.": "FFmpeg non è stato trovato.",
+    "Do you want to configure/download FFmpeg now?\nOtherwise, the animation will be exported as a PNG image sequence.": "Vuoi configurare/scaricare FFmpeg adesso?\nIn alternativa, l'animazione verrà esportata come sequenza di immagini PNG.",
+    "Configure / Download...": "Configura / Scarica...",
+    "Export PNG": "Esporta PNG",
+    "Cancel": "Annulla",
+    "Could not generate the MP4 video.\nThe PNG frames were kept in:\n": "Impossibile generare il video MP4.\nI fotogrammi PNG sono stati salvati in:\n",
+    "Export finished: {n} frames.": "Esportazione completata: {n} fotogrammi.",
+    "Failed to run FFmpeg. The PNG frames were kept in:\n": "Impossibile eseguire FFmpeg. I fotogrammi PNG sono stati salvati in:\n",
+    # Controller
+    "There are no scenes to remove.": "Non ci sono scene da rimuovere.",
+    "Choose the scene to remove:": "Scegli la scena da rimuovere:",
+    "{name} removed.": "{name} rimossa.",
+    "Remove ALL {n} scenes?": "Rimuovere TUTTE le {n} scene?",
+    "All scenes were removed.": "Tutte le scene sono state rimosse.",
+    "Add at least one scene (2 or more recommended).": "Aggiungi almeno una scena (consigliato: 2 o più).",
+    "Playing scene animation...": "Riproduzione dell'animazione delle scene...",
+    "Timing and frame settings updated.": "Impostazioni di tempi e fotogrammi aggiornate.",
+    "Scene": "Scena",
+    "Scene {n}": "Scena {n}",
+    "{name} added (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).": "{name} aggiunta (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).",
+})
+
+
+_TEXTS["it"].update({
+    # Pannello laterale
+    "Scenes": "Scene",
+    "Scenes are saved inside the project's .igz file.": "Le scene sono salvate all'interno del file .igz del progetto.",
+    "Add": "Aggiungi",
+    "Remove": "Rimuovi",
+    "Clear": "Svuota",
+    "Playback": "Riproduzione",
+    "Play": "Riproduci",
+    "Stop": "Interrompi",
+    "Loop": "Ripeti in loop",
+    "Timings and Frames": "Tempi e Fotogrammi",
+    "Interpolation:": "Interpolazione:",
+    "Apply settings": "Applica impostazioni",
+    "Export": "Esportazione",
+    "Export Animation": "Esporta Animazione",
+    "Video Dependencies": "Dipendenze video",
+    "Settings applied.": "Impostazioni applicate.",
+    "{n} scene(s) — {total:.2f}s — ~{frames} frames": "{n} scena/e — {total:.2f}s — ~{frames} fotogrammi",
+    "available": "disponibile",
+    "missing": "assente",
+    # Dipendenze video
+    "MP4 export uses <b>FFmpeg</b>.\nCheck the status below and download it if it is missing.": "L'esportazione in MP4 usa <b>FFmpeg</b>.\nControlla lo stato qui sotto e scaricalo se manca.",
+    "Download FFmpeg": "Scarica FFmpeg",
+    "Downloads and extracts FFmpeg (~90 MB) to the plugin's local folder.": "Scarica ed estrae FFmpeg (~90 MB) nella cartella locale del plugin.",
+    "Browse...": "Sfoglia...",
+    "Select an already installed ffmpeg(.exe).": "Seleziona un ffmpeg(.exe) già installato.",
+    "Refresh status": "Aggiorna stato",
+    "Open folder": "Apri cartella",
+    "MISSING": "ASSENTE",
+    "absent": "assente",
+    "Downloading FFmpeg... (may take a while / ~90 MB)": "Scaricamento di FFmpeg... (può richiedere tempo / ~90 MB)",
+    "FFmpeg ready at: {path}": "FFmpeg pronto in: {path}",
+    "FFmpeg failure: {msg}": "Errore FFmpeg: {msg}",
+    "Select the ffmpeg executable": "Seleziona l'eseguibile ffmpeg",
+    "All files (*.*)": "Tutti i file (*.*)",
+    "FFmpeg set: {path}": "FFmpeg configurato: {path}",
+    "Dependencies folder: {path}": "Cartella delle dipendenze: {path}",
+    # Downloader (FFmpeg)
+    "canceled by user": "annullato dall'utente",
+    "Downloading FFmpeg...": "Scaricamento di FFmpeg...",
+    "Canceled.": "Annullato.",
+    "Downloading from {host}...": "Scaricamento da {host}...",
+    "Extracting...": "Estrazione...",
+    "{url}: ffmpeg.exe not found in the package": "{url}: ffmpeg.exe non trovato nel pacchetto",
+    "Download failed.": "Download non riuscito.",
+    # Barra degli strumenti
+    "Add Current Scene": "Aggiungi scena corrente",
+    "Captures the current camera's eye, target and fov as a new scene.": "Cattura eye, target e fov della camera corrente come nuova scena.",
+    "Remove Selected Scene": "Rimuovi scena selezionata",
+    "Removes the currently selected scene from the list.": "Rimuove dalla lista la scena attualmente selezionata.",
+    "Clear Scenes": "Svuota scene",
+    "Removes ALL scenes from the list.": "Rimuove TUTTE le scene dalla lista.",
+    "Play Scene Animation": "Riproduci animazione delle scene",
+    "Smoothly plays through the scenes stored in the viewport.": "Percorre fluidamente le scene memorizzate nel viewport.",
+    "Stop Animation": "Interrompi animazione",
+    "Stops the running scene animation.": "Interrompe l'animazione delle scene in esecuzione.",
+    "Configure Timings and Frames": "Configura tempi e fotogrammi",
+    "Configures FPS, interpolation, loop and per-scene timings.": "Configura FPS, interpolazione, loop e i tempi per scena.",
+    "Exports the animation as a PNG sequence or MP4 video.": "Esporta l'animazione come sequenza PNG o video MP4.",
+    "Configure/download FFmpeg to export MP4.": "Configura/scarica FFmpeg per esportare in MP4.",
+    "Scenes Panel": "Pannello scene",
+    "Show/hide the scenes panel.": "Mostra/nascondi il pannello delle scene.",
+    "Go to the scenes tab.": "Vai alla scheda delle scene.",
+})
+
+
+_TEXTS["de"].update({
+    # Fenstertitel / Dialoge
+    "Ark-Z Scenes - Timings and Frames": "Ark-Z Scenes - Zeiten und Bilder",
+    "Ark-Z Scenes - Export Animation": "Ark-Z Scenes - Animation exportieren",
+    "Ark-Z Scenes - Video Dependencies": "Ark-Z Scenes - Video-Abhängigkeiten",
+    # Dialog Zeiten und Bilder
+    "Frames per second (FPS):": "Bilder pro Sekunde (FPS):",
+    "Camera interpolation:": "Kamera-Interpolation:",
+    "Loop?": "In Schleife wiederholen?",
+    "Default transition:": "Standardübergang:",
+    "Default hold:": "Standardverweildauer:",
+    "Scene timings (edit columns 2 and 3):": "Zeiten pro Szene (Spalten 2 und 3 bearbeiten):",
+    "Hold (s)": "Verweildauer (s)",
+    "Transition (s)": "Übergang (s)",
+    # Glättung / Ja-Nein
+    "Smooth": "Weich",
+    "Linear": "Linear",
+    "Yes": "Ja",
+    "No": "Nein",
+    # Dialog Export
+    "PNG image sequence": "PNG-Bildsequenz",
+    "MP4 video": "MP4-Video",
+    "Output format:": "Ausgabeformat:",
+    "W": "B",
+    "x  H": "x  H",
+    "Size (W × H):": "Größe (B × H):",
+    "Keep screen aspect ratio": "Seitenverhältnis des Bildschirms beibehalten",
+    "Current screen size": "Aktuelle Bildschirmgröße",
+    "Summary:": "Zusammenfassung:",
+    "{n} scene(s) - {total:.2f}s - ~{frames} frames - {w}x{h} px": "{n} Szene(n) - {total:.2f}s - ~{frames} Bilder - {w}x{h} px",
+    # Export
+    "There are no scenes to export.": "Es gibt keine Szenen zum Exportieren.",
+    "Viewport not found.": "Viewport nicht gefunden.",
+    "Folder to save the PNG images": "Ordner zum Speichern der PNG-Bilder",
+    "Save MP4 video": "MP4-Video speichern",
+    "animation.mp4": "animation.mp4",
+    "MP4 video (*.mp4)": "MP4-Video (*.mp4)",
+    "FFmpeg was not found.": "FFmpeg wurde nicht gefunden.",
+    "Do you want to configure/download FFmpeg now?\nOtherwise, the animation will be exported as a PNG image sequence.": "Möchten Sie FFmpeg jetzt konfigurieren/herunterladen?\nAndernfalls wird die Animation als PNG-Bildsequenz exportiert.",
+    "Configure / Download...": "Konfigurieren / Herunterladen...",
+    "Export PNG": "PNG exportieren",
+    "Cancel": "Abbrechen",
+    "Could not generate the MP4 video.\nThe PNG frames were kept in:\n": "Das MP4-Video konnte nicht erstellt werden.\nDie PNG-Bilder wurden gespeichert in:\n",
+    "Export finished: {n} frames.": "Export abgeschlossen: {n} Bilder.",
+    "Failed to run FFmpeg. The PNG frames were kept in:\n": "FFmpeg konnte nicht ausgeführt werden. Die PNG-Bilder wurden gespeichert in:\n",
+    # Controller
+    "There are no scenes to remove.": "Es gibt keine Szenen zum Entfernen.",
+    "Choose the scene to remove:": "Wählen Sie die zu entfernende Szene:",
+    "{name} removed.": "{name} entfernt.",
+    "Remove ALL {n} scenes?": "ALLE {n} Szenen entfernen?",
+    "All scenes were removed.": "Alle Szenen wurden entfernt.",
+    "Add at least one scene (2 or more recommended).": "Fügen Sie mindestens eine Szene hinzu (empfohlen: 2 oder mehr).",
+    "Playing scene animation...": "Szenen-Animation wird abgespielt...",
+    "Timing and frame settings updated.": "Zeit- und Bild-Einstellungen aktualisiert.",
+    "Scene": "Szene",
+    "Scene {n}": "Szene {n}",
+    "{name} added (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).": "{name} hinzugefügt (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), fov={fov:.1f}).",
+})
+
+
+_TEXTS["de"].update({
+    # Seitenpanel
+    "Scenes": "Szenen",
+    "Scenes are saved inside the project's .igz file.": "Die Szenen werden in der .igz-Datei des Projekts gespeichert.",
+    "Add": "Hinzufügen",
+    "Remove": "Entfernen",
+    "Clear": "Leeren",
+    "Playback": "Wiedergabe",
+    "Play": "Abspielen",
+    "Stop": "Stopp",
+    "Loop": "Schleife",
+    "Timings and Frames": "Zeiten und Bilder",
+    "Interpolation:": "Interpolation:",
+    "Apply settings": "Einstellungen anwenden",
+    "Export": "Export",
+    "Export Animation": "Animation exportieren",
+    "Video Dependencies": "Video-Abhängigkeiten",
+    "Settings applied.": "Einstellungen angewendet.",
+    "{n} scene(s) — {total:.2f}s — ~{frames} frames": "{n} Szene(n) — {total:.2f}s — ~{frames} Bilder",
+    "available": "verfügbar",
+    "missing": "fehlt",
+    # Video-Abhängigkeiten
+    "MP4 export uses <b>FFmpeg</b>.\nCheck the status below and download it if it is missing.": "Der MP4-Export verwendet <b>FFmpeg</b>.\nPrüfen Sie den Status unten und laden Sie es herunter, falls es fehlt.",
+    "Download FFmpeg": "FFmpeg herunterladen",
+    "Downloads and extracts FFmpeg (~90 MB) to the plugin's local folder.": "Lädt FFmpeg (~90 MB) herunter und entpackt es in den lokalen Plugin-Ordner.",
+    "Browse...": "Durchsuchen...",
+    "Select an already installed ffmpeg(.exe).": "Eine bereits installierte ffmpeg(.exe) auswählen.",
+    "Refresh status": "Status aktualisieren",
+    "Open folder": "Ordner öffnen",
+    "MISSING": "FEHLT",
+    "absent": "fehlt",
+    "Downloading FFmpeg... (may take a while / ~90 MB)": "FFmpeg wird heruntergeladen... (kann dauern / ~90 MB)",
+    "FFmpeg ready at: {path}": "FFmpeg bereit unter: {path}",
+    "FFmpeg failure: {msg}": "FFmpeg-Fehler: {msg}",
+    "Select the ffmpeg executable": "Wählen Sie die ffmpeg-Anwendung",
+    "All files (*.*)": "Alle Dateien (*.*)",
+    "FFmpeg set: {path}": "FFmpeg konfiguriert: {path}",
+    "Dependencies folder: {path}": "Abhängigkeitsordner: {path}",
+    # Downloader (FFmpeg)
+    "canceled by user": "vom Benutzer abgebrochen",
+    "Downloading FFmpeg...": "FFmpeg wird heruntergeladen...",
+    "Canceled.": "Abgebrochen.",
+    "Downloading from {host}...": "Herunterladen von {host}...",
+    "Extracting...": "Wird entpackt...",
+    "{url}: ffmpeg.exe not found in the package": "{url}: ffmpeg.exe im Paket nicht gefunden",
+    "Download failed.": "Download fehlgeschlagen.",
+    # Symbolleiste
+    "Add Current Scene": "Aktuelle Szene hinzufügen",
+    "Captures the current camera's eye, target and fov as a new scene.": "Erfasst Eye, Target und FOV der aktuellen Kamera als neue Szene.",
+    "Remove Selected Scene": "Ausgewählte Szene entfernen",
+    "Removes the currently selected scene from the list.": "Entfernt die aktuell ausgewählte Szene aus der Liste.",
+    "Clear Scenes": "Szenen leeren",
+    "Removes ALL scenes from the list.": "Entfernt ALLE Szenen aus der Liste.",
+    "Play Scene Animation": "Szenen-Animation abspielen",
+    "Smoothly plays through the scenes stored in the viewport.": "Spielt die im Viewport gespeicherten Szenen weich ab.",
+    "Stop Animation": "Animation stoppen",
+    "Stops the running scene animation.": "Stoppt die laufende Szenen-Animation.",
+    "Configure Timings and Frames": "Zeiten und Bilder konfigurieren",
+    "Configures FPS, interpolation, loop and per-scene timings.": "Konfiguriert FPS, Interpolation, Schleife und Zeiten pro Szene.",
+    "Exports the animation as a PNG sequence or MP4 video.": "Exportiert die Animation als PNG-Sequenz oder MP4-Video.",
+    "Configure/download FFmpeg to export MP4.": "FFmpeg konfigurieren/herunterladen, um MP4 zu exportieren.",
+    "Scenes Panel": "Szenen-Panel",
+    "Show/hide the scenes panel.": "Das Szenen-Panel ein-/ausblenden.",
+    "Go to the scenes tab.": "Zum Szenen-Tab wechseln.",
+})
+
+
+# IGZ_L10N_ANCHOR
+
+
+# =========================================================================
 # ÍCONES (mesmo esquema da igz_tb_camera)
 # =========================================================================
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -178,7 +768,7 @@ class Scene:
     @classmethod
     def from_dict(cls, d):
         return cls(
-            d.get("nome", "Cena"),
+            d.get("nome", _t("Scene")),
             d.get("eye", [0.0, -10.0, 5.0]),
             d.get("target", [0.0, 0.0, 0.0]),
             d.get("fov", 30.0),
@@ -290,7 +880,7 @@ def _ffmpeg_status():
 def _dependencies_report() -> str:
     ok_ff, p_ff = _ffmpeg_status()
     return (
-        f"FFmpeg: {'OK' if ok_ff else 'AUSENTE'}"
+        f"FFmpeg: {'OK' if ok_ff else _t('MISSING')}"
         f"{' - ' + p_ff if p_ff else ''}"
     )
 
@@ -332,10 +922,10 @@ class FfmpegDownloadWorker(QThread):
                 lido += len(chunk)
                 if total:
                     self.progresso.emit(
-                        int(lido * 100 / total), "Baixando FFmpeg..."
+                        int(lido * 100 / total), _t("Downloading FFmpeg...")
                     )
                 else:
-                    self.progresso.emit(-1, "Baixando FFmpeg...")
+                    self.progresso.emit(-1, _t("Downloading FFmpeg..."))
 
     def _extrair(self, zip_path):
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -352,12 +942,14 @@ class FfmpegDownloadWorker(QThread):
         erros = []
         for url in self.URLS:
             if self._cancel:
-                self.concluido.emit(False, "Cancelado.")
+                self.concluido.emit(False, _t("Canceled."))
                 return
             try:
-                self.progresso.emit(0, f"Baixando de {url.split('/')[2]}...")
+                self.progresso.emit(
+                    0, _t("Downloading from {host}...", host=url.split("/")[2])
+                )
                 self._baixar(url, zip_path)
-                self.progresso.emit(-1, "Extraindo...")
+                self.progresso.emit(-1, _t("Extracting..."))
                 exe = self._extrair(zip_path)
                 if exe:
                     set_config_value("ffmpeg_path", exe)
@@ -367,10 +959,14 @@ class FfmpegDownloadWorker(QThread):
                         pass
                     self.concluido.emit(True, exe)
                     return
-                erros.append(f"{url}: ffmpeg.exe não encontrado no pacote")
+                erros.append(_t(
+                    "{url}: ffmpeg.exe not found in the package", url=url
+                ))
             except Exception as exc:
                 erros.append(f"{url}: {exc}")
-        self.concluido.emit(False, "\n".join(erros) or "Falha no download.")
+        self.concluido.emit(
+            False, "\n".join(erros) or _t("Download failed.")
+        )
 
 
 # =========================================================================
@@ -382,14 +978,16 @@ class DependencyDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Ark-Z Scenes - Dependências de Vídeo")
+        self.setWindowTitle(_t("Ark-Z Scenes - Video Dependencies"))
         self.resize(580, 440)
         self._dl_thread = None
 
         root = QVBoxLayout(self)
         intro = QLabel(
-            "A exportação para MP4 usa o <b>FFmpeg</b>.\n"
-            "Verifique o estado abaixo e baixe-o se estiver ausente."
+            _t(
+                "MP4 export uses <b>FFmpeg</b>.\n"
+                "Check the status below and download it if it is missing."
+            )
         )
         intro.setWordWrap(True)
         root.addWidget(intro)
@@ -402,14 +1000,19 @@ class DependencyDialog(QDialog):
         self.lbl_ff.setWordWrap(True)
         grid.addWidget(self.lbl_ff, 0, 1)
         caixa_ff = QHBoxLayout()
-        self.btn_dl = QPushButton("Baixar FFmpeg")
+        self.btn_dl = QPushButton(_t("Download FFmpeg"))
         self.btn_dl.setToolTip(
-            "Baixa e extrai o FFmpeg (~90 MB) para a pasta local do plugin."
+            _t(
+                "Downloads and extracts FFmpeg (~90 MB) to the plugin's "
+                "local folder."
+            )
         )
         self.btn_dl.clicked.connect(self._baixar_ffmpeg)
         caixa_ff.addWidget(self.btn_dl)
-        self.btn_local = QPushButton("Procurar...")
-        self.btn_local.setToolTip("Selecionar um ffmpeg(.exe) já instalado.")
+        self.btn_local = QPushButton(_t("Browse..."))
+        self.btn_local.setToolTip(
+            _t("Select an already installed ffmpeg(.exe).")
+        )
         self.btn_local.clicked.connect(self._procurar_ffmpeg)
         caixa_ff.addWidget(self.btn_local)
         grid.addLayout(caixa_ff, 0, 2)
@@ -425,11 +1028,11 @@ class DependencyDialog(QDialog):
 
         btns = QDialogButtonBox(QDialogButtonBox.Close, self)
         self.btn_refresh = btns.addButton(
-            "Atualizar status", QDialogButtonBox.ActionRole
+            _t("Refresh status"), QDialogButtonBox.ActionRole
         )
         self.btn_refresh.clicked.connect(self._atualizar_status)
         self.btn_pasta = btns.addButton(
-            "Abrir pasta", QDialogButtonBox.ActionRole
+            _t("Open folder"), QDialogButtonBox.ActionRole
         )
         self.btn_pasta.clicked.connect(self._abrir_pasta)
         btns.rejected.connect(self.reject)
@@ -445,16 +1048,18 @@ class DependencyDialog(QDialog):
     def _atualizar_status(self):
         ok_ff, p_ff = _ffmpeg_status()
         self.lbl_ff.setText(
-            ("disponivel" if ok_ff else "AUSENTE")
+            (_t("available") if ok_ff else _t("MISSING"))
             + (f"\n{p_ff}" if p_ff else "")
         )
         self.btn_dl.setEnabled(not ok_ff)
         self._append_log(
-            f"Status -> FFmpeg: {'OK' if ok_ff else 'ausente'}"
+            f"Status -> FFmpeg: {'OK' if ok_ff else _t('absent')}"
         )
 
     def _baixar_ffmpeg(self):
-        self._append_log("Baixando FFmpeg... (pode demorar / ~90 MB)")
+        self._append_log(
+            _t("Downloading FFmpeg... (may take a while / ~90 MB)")
+        )
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.btn_dl.setEnabled(False)
@@ -476,19 +1081,19 @@ class DependencyDialog(QDialog):
         self.progress.setRange(0, 100)
         self.progress.setValue(100 if ok else 0)
         if ok:
-            self._append_log(f"FFmpeg pronto em: {msg}")
+            self._append_log(_t("FFmpeg ready at: {path}", path=msg))
         else:
-            self._append_log("Falha no FFmpeg: " + (msg or ""))
+            self._append_log(_t("FFmpeg failure: {msg}", msg=(msg or "")))
         self._atualizar_status()
 
     def _procurar_ffmpeg(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Selecione o executável ffmpeg", "",
-            "FFmpeg (ffmpeg.exe ffmpeg);;Todos os arquivos (*.*)",
+            self, _t("Select the ffmpeg executable"), "",
+            "FFmpeg (ffmpeg.exe ffmpeg);;" + _t("All files (*.*)"),
         )
         if path:
             set_config_value("ffmpeg_path", path)
-            self._append_log(f"FFmpeg configurado: {path}")
+            self._append_log(_t("FFmpeg set: {path}", path=path))
             self._atualizar_status()
 
     def _abrir_pasta(self):
@@ -502,7 +1107,7 @@ class DependencyDialog(QDialog):
             else:
                 subprocess.Popen(["xdg-open", d])
         except Exception:
-            self._append_log(f"Pasta de dependências: {d}")
+            self._append_log(_t("Dependencies folder: {path}", path=d))
 
     def reject(self):
         if self._dl_thread is not None and self._dl_thread.isRunning():
@@ -540,7 +1145,7 @@ def sequence_duration(cenas) -> float:
     return total
 
 
-def sample_sequence(cenas, t, suavizacao="Suave"):
+def sample_sequence(cenas, t, suavizacao="Smooth"):
     """Amostra (eye, target, fov) da sequência no tempo t (segundos)."""
     n = len(cenas)
     if n == 0:
@@ -607,7 +1212,7 @@ def _interpolar(cenas, i, u, suavizacao):
 class SceneSequenceAnimation:
     """Percorre suavemente a sequência de cenas na viewport (preview)."""
 
-    def __init__(self, controller, cenas, fps=30.0, suavizacao="Suave",
+    def __init__(self, controller, cenas, fps=30.0, suavizacao="Smooth",
                  loop=False):
         self.controller = controller
         self.cenas = list(cenas)
@@ -670,7 +1275,7 @@ class SceneSequenceAnimation:
 class ScenesConfigDialog(QDialog):
     def __init__(self, controller, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Ark-Z Scenes - Tempos e Quadros")
+        self.setWindowTitle(_t("Ark-Z Scenes - Timings and Frames"))
         self.controller = controller
 
         layout = QVBoxLayout(self)
@@ -679,38 +1284,37 @@ class ScenesConfigDialog(QDialog):
         self.sb_fps = QSpinBox()
         self.sb_fps.setRange(1, 240)
         self.sb_fps.setValue(int(round(controller.fps)))
-        form.addRow("Quadros por segundo (FPS):", self.sb_fps)
+        form.addRow(_t("Frames per second (FPS):"), self.sb_fps)
 
         self.cb_suav = QComboBox()
-        self.cb_suav.addItems(["Suave", "Linear", "Catmull-Rom"])
-        self.cb_suav.setCurrentText(controller.suavizacao)
-        form.addRow("Interpolação da câmera:", self.cb_suav)
+        _fill_smooth_combo(self.cb_suav, controller.suavizacao)
+        form.addRow(_t("Camera interpolation:"), self.cb_suav)
 
         self.cb_loop = QComboBox()
-        self.cb_loop.addItems(["Não", "Sim"])
-        self.cb_loop.setCurrentText("Sim" if controller.loop else "Não")
-        form.addRow("Repetir em loop?", self.cb_loop)
+        self.cb_loop.addItems([_t("No"), _t("Yes")])
+        self.cb_loop.setCurrentText(_t("Yes") if controller.loop else _t("No"))
+        form.addRow(_t("Loop?"), self.cb_loop)
 
         self.sb_trans = QDoubleSpinBox()
         self.sb_trans.setRange(0.0, 3600.0)
         self.sb_trans.setDecimals(2)
         self.sb_trans.setValue(controller.transicao_padrao_s)
         self.sb_trans.setSuffix(" s")
-        form.addRow("Transição padrão:", self.sb_trans)
+        form.addRow(_t("Default transition:"), self.sb_trans)
 
         self.sb_hold = QDoubleSpinBox()
         self.sb_hold.setRange(0.0, 3600.0)
         self.sb_hold.setDecimals(2)
         self.sb_hold.setValue(controller.hold_padrao_s)
         self.sb_hold.setSuffix(" s")
-        form.addRow("Permanência padrão:", self.sb_hold)
+        form.addRow(_t("Default hold:"), self.sb_hold)
 
         layout.addLayout(form)
 
-        layout.addWidget(QLabel("Tempos por cena (edite as colunas 2 e 3):"))
+        layout.addWidget(QLabel(_t("Scene timings (edit columns 2 and 3):")))
         self.tabela = QTableWidget(0, 3)
         self.tabela.setHorizontalHeaderLabels(
-            ["Cena", "Permanência (s)", "Transição (s)"]
+            [_t("Scene"), _t("Hold (s)"), _t("Transition (s)")]
         )
         self.tabela.setEditTriggers(
             QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked
@@ -736,8 +1340,8 @@ class ScenesConfigDialog(QDialog):
     def aplicar(self):
         c = self.controller
         c.fps = float(self.sb_fps.value())
-        c.suavizacao = self.cb_suav.currentText()
-        c.loop = self.cb_loop.currentText() == "Sim"
+        c.suavizacao = _current_smooth(self.cb_suav)
+        c.loop = self.cb_loop.currentText() == _t("Yes")
         c.transicao_padrao_s = self.sb_trans.value()
         c.hold_padrao_s = self.sb_hold.value()
 
@@ -762,16 +1366,16 @@ class ScenesConfigDialog(QDialog):
 class ScenesExportDialog(QDialog):
     def __init__(self, controller, parent=None, modo_inicial=None):
         super().__init__(parent)
-        self.setWindowTitle("Ark-Z Scenes - Exportar Animação")
+        self.setWindowTitle(_t("Ark-Z Scenes - Export Animation"))
         self.controller = controller
 
         layout = QFormLayout(self)
 
         self.cb_formato = QComboBox()
-        self.cb_formato.addItems(["Sequência de Imagens PNG", "Vídeo MP4"])
+        self.cb_formato.addItems([_t("PNG image sequence"), _t("MP4 video")])
         if str(modo_inicial).upper() == "MP4":
             self.cb_formato.setCurrentIndex(1)
-        layout.addRow("Formato de saída:", self.cb_formato)
+        layout.addRow(_t("Output format:"), self.cb_formato)
 
         self.sb_fps = QSpinBox()
         self.sb_fps.setRange(1, 240)
@@ -803,24 +1407,24 @@ class ScenesExportDialog(QDialog):
         self.sb_h.setValue(int(h0))
         self.sb_h.setSuffix(" px")
         linha_tam = QHBoxLayout()
-        linha_tam.addWidget(QLabel("L"))
+        linha_tam.addWidget(QLabel(_t("W")))
         linha_tam.addWidget(self.sb_w)
-        linha_tam.addWidget(QLabel("x  A"))
+        linha_tam.addWidget(QLabel(_t("x  H")))
         linha_tam.addWidget(self.sb_h)
         holder = QWidget()
         holder.setLayout(linha_tam)
-        layout.addRow("Tamanho (L x A):", holder)
+        layout.addRow(_t("Size (W × H):"), holder)
 
-        self.chk_lock = QCheckBox("Manter proporção da tela")
+        self.chk_lock = QCheckBox(_t("Keep screen aspect ratio"))
         self.chk_lock.setChecked(True)
         layout.addRow("", self.chk_lock)
 
-        self.btn_reset = QPushButton("Tamanho da tela atual")
+        self.btn_reset = QPushButton(_t("Current screen size"))
         self.btn_reset.clicked.connect(self._usar_viewport)
         layout.addRow("", self.btn_reset)
 
         self.lbl_info = QLabel("")
-        layout.addRow("Resumo:", self.lbl_info)
+        layout.addRow(_t("Summary:"), self.lbl_info)
         self._atualizar()
 
         self.cb_formato.currentIndexChanged.connect(self._atualizar)
@@ -868,8 +1472,11 @@ class ScenesExportDialog(QDialog):
         fps = self.sb_fps.value()
         w, h = self.tamanho()
         self.lbl_info.setText(
-            f"{len(self.controller.cenas)} cena(s) - {total:.2f}s - "
-            f"~{max(1, int(round(total * fps)))} frames - {w}x{h} px"
+            _t(
+                "{n} scene(s) - {total:.2f}s - ~{frames} frames - {w}x{h} px",
+                n=len(self.controller.cenas), total=total,
+                frames=max(1, int(round(total * fps))), w=w, h=h,
+            )
         )
 
     def modo_saida(self) -> str:
@@ -905,7 +1512,7 @@ class ScenesController:
         # para projetos novos; as cenas em si ficam salvas dentro do .igz.
         cfg = load_config()
         self.fps = float(cfg.get("fps", 30.0))
-        self.suavizacao = cfg.get("suavizacao", "Suave")
+        self.suavizacao = _norm_smooth(cfg.get("suavizacao", "Smooth"))
         self.loop = bool(cfg.get("loop", False))
         self.transicao_padrao_s = float(cfg.get("transicao_padrao_s", 2.0))
         self.hold_padrao_s = float(cfg.get("hold_padrao_s", 1.0))
@@ -1002,7 +1609,7 @@ class ScenesController:
         eye = self.get_camera_eye()
         target = self.get_camera_target()
         fov = self.get_camera_fov()
-        nome = f"Cena {len(self.cenas) + 1}"
+        nome = _t("Scene {n}", n=len(self.cenas) + 1)
         sc = Scene(nome, eye, target, fov,
                    hold_s=self.hold_padrao_s,
                    transicao_s=self.transicao_padrao_s)
@@ -1011,15 +1618,18 @@ class ScenesController:
         self.refresh_panel()
         self.salvar_no_documento()
         self._flash(
-            f"{nome} adicionada (eye=({eye[0]:.2f}, {eye[1]:.2f}, "
-            f"{eye[2]:.2f}), fov={fov:.1f})."
+            _t(
+                "{name} added (eye=({ex:.2f}, {ey:.2f}, {ez:.2f}), "
+                "fov={fov:.1f}).",
+                name=nome, ex=eye[0], ey=eye[1], ez=eye[2], fov=fov,
+            )
         )
 
     def remover_cena_selecionada(self):
         if not self.cenas:
             QMessageBox.information(
                 self.main_window, "Ark-Z Scenes",
-                "Não há cenas para remover."
+                _t("There are no scenes to remove.")
             )
             return
         idx = self.indice_selecionado
@@ -1027,7 +1637,7 @@ class ScenesController:
             if len(self.cenas) == 1:
                 idx = 0
             else:
-                idx = self._escolher_cena("Escolha a cena a remover:")
+                idx = self._escolher_cena(_t("Choose the scene to remove:"))
                 if idx < 0:
                     return
         nome = self.cenas[idx].nome
@@ -1035,14 +1645,14 @@ class ScenesController:
         self.indice_selecionado = min(idx, len(self.cenas) - 1)
         self.refresh_panel()
         self.salvar_no_documento()
-        self._flash(f"{nome} removida.")
+        self._flash(_t("{name} removed.", name=nome))
 
     def limpar_cenas(self):
         if not self.cenas:
             return
         resp = QMessageBox.question(
             self.main_window, "Ark-Z Scenes",
-            f"Remover TODAS as {len(self.cenas)} cenas?",
+            _t("Remove ALL {n} scenes?", n=len(self.cenas)),
             QMessageBox.Yes | QMessageBox.No,
         )
         if resp != QMessageBox.Yes:
@@ -1051,7 +1661,7 @@ class ScenesController:
         self.indice_selecionado = -1
         self.refresh_panel()
         self.salvar_no_documento()
-        self._flash("Todas as cenas foram removidas.")
+        self._flash(_t("All scenes were removed."))
 
     def _escolher_cena(self, titulo):
         dlg = QDialog(self.main_window)
@@ -1223,12 +1833,13 @@ class ScenesController:
         if len(self.cenas) < 1:
             QMessageBox.information(
                 self.main_window, "Ark-Z Scenes",
-                "Adicione pelo menos uma cena (recomendado: 2 ou mais).",
+                _t("Add at least one scene (2 or more recommended)."),
             )
             return
         if self.viewport is None:
             QMessageBox.warning(
-                self.main_window, "Ark-Z Scenes", "Viewport não encontrada."
+                self.main_window, "Ark-Z Scenes",
+                _t("Viewport not found.")
             )
             return
         if self.animacao_ativa:
@@ -1237,7 +1848,7 @@ class ScenesController:
             self, self.cenas, self.fps, self.suavizacao, self.loop
         )
         self.animacao_ativa.iniciar()
-        self._flash("Reproduzindo animação de cenas...")
+        self._flash(_t("Playing scene animation..."))
 
     def parar_animacao(self):
         if self.animacao_ativa:
@@ -1251,7 +1862,7 @@ class ScenesController:
             dlg.aplicar()
             self.save_prefs()
             self.refresh_panel()
-            self._flash("Configuração de tempos e quadros atualizada.")
+            self._flash(_t("Timing and frame settings updated."))
 
     # ---- Exportação -----------------------------------------------------
     def _escolher_backend_mp4(self):
@@ -1263,17 +1874,19 @@ class ScenesController:
             box = QMessageBox(self.main_window)
             box.setWindowTitle("Ark-Z Scenes")
             box.setIcon(QMessageBox.Information)
-            box.setText("O FFmpeg não foi encontrado.")
+            box.setText(_t("FFmpeg was not found."))
             box.setInformativeText(
-                "Deseja configurar/baixar o FFmpeg agora?\n"
-                "Se preferir, a animação será exportada como sequência de "
-                "imagens PNG."
+                _t(
+                    "Do you want to configure/download FFmpeg now?\n"
+                    "Otherwise, the animation will be exported as a PNG "
+                    "image sequence."
+                )
             )
             b_cfg = box.addButton(
-                "Configurar / Baixar...", QMessageBox.AcceptRole
+                _t("Configure / Download..."), QMessageBox.AcceptRole
             )
-            b_png = box.addButton("Exportar PNG", QMessageBox.ActionRole)
-            b_cancel = box.addButton("Cancelar", QMessageBox.RejectRole)
+            b_png = box.addButton(_t("Export PNG"), QMessageBox.ActionRole)
+            b_cancel = box.addButton(_t("Cancel"), QMessageBox.RejectRole)
             box.setDefaultButton(b_cfg)
             box.exec()
 
@@ -1289,12 +1902,13 @@ class ScenesController:
         if not self.cenas:
             QMessageBox.information(
                 self.main_window, "Ark-Z Scenes",
-                "Não há cenas para exportar.",
+                _t("There are no scenes to export."),
             )
             return
         if self.viewport is None:
             QMessageBox.warning(
-                self.main_window, "Ark-Z Scenes", "Viewport não encontrada."
+                self.main_window, "Ark-Z Scenes",
+                _t("Viewport not found.")
             )
             return
 
@@ -1314,7 +1928,7 @@ class ScenesController:
 
         if modo == "PNG":
             out_dir = QFileDialog.getExistingDirectory(
-                self.main_window, "Pasta para salvar as imagens PNG"
+                self.main_window, _t("Folder to save the PNG images")
             )
             if not out_dir:
                 return
@@ -1322,8 +1936,8 @@ class ScenesController:
             return
 
         out_file, _ = QFileDialog.getSaveFileName(
-            self.main_window, "Salvar vídeo MP4", "animacao.mp4",
-            "Vídeo MP4 (*.mp4)",
+            self.main_window, _t("Save MP4 video"), _t("animation.mp4"),
+            _t("MP4 video (*.mp4)"),
         )
         if not out_file:
             return
@@ -1335,7 +1949,7 @@ class ScenesController:
             return
         if backend == "png":
             out_dir = QFileDialog.getExistingDirectory(
-                self.main_window, "Pasta para salvar as imagens PNG"
+                self.main_window, _t("Folder to save the PNG images")
             )
             if not out_dir:
                 return
@@ -1370,7 +1984,7 @@ class ScenesController:
 
         if backend == "png" and not out_dir:
             out_dir = QFileDialog.getExistingDirectory(
-                self.main_window, "Pasta para salvar as imagens PNG"
+                self.main_window, _t("Folder to save the PNG images")
             )
             if not out_dir:
                 return
@@ -1434,14 +2048,14 @@ class ScenesController:
             elif not resultado and tmp_frames:
                 QMessageBox.warning(
                     self.main_window, "Ark-Z Scenes",
-                    "Não foi possível gerar o vídeo MP4.\n"
-                    "Os frames PNG foram mantidos em:\n" + tmp_frames,
+                    _t("Could not generate the MP4 video.\n"
+                       "The PNG frames were kept in:\n") + tmp_frames,
                 )
 
         dest = resultado or (out_file if backend == "ffmpeg" else out_dir)
         QMessageBox.information(
             self.main_window, "Ark-Z Scenes",
-            f"Exportação concluída: {gravados} frames."
+            _t("Export finished: {n} frames.", n=gravados)
             + (f"\n{dest}" if dest else ""),
         )
 
@@ -1511,12 +2125,13 @@ class ScenesPanel(QWidget):
 
         root.addWidget(QLabel("<b>Ark-Z Scenes</b>"))
         nota = QLabel(
-            "<i>As cenas são salvas dentro do arquivo .igz do projeto.</i>"
+            "<i>" + _t("Scenes are saved inside the project's .igz file.")
+            + "</i>"
         )
         nota.setWordWrap(True)
         root.addWidget(nota)
 
-        gb = QGroupBox("Cenas")
+        gb = QGroupBox(_t("Scenes"))
         v = QVBoxLayout(gb)
         self.lista = QListWidget()
         self.lista.currentRowChanged.connect(self._selecionar)
@@ -1529,34 +2144,34 @@ class ScenesPanel(QWidget):
         )
         v.addWidget(self.lista)
         h = QHBoxLayout()
-        self.btn_add = QPushButton("Adicionar")
+        self.btn_add = QPushButton(_t("Add"))
         self.btn_add.clicked.connect(self._add)
-        self.btn_rem = QPushButton("Remover")
+        self.btn_rem = QPushButton(_t("Remove"))
         self.btn_rem.clicked.connect(self._rem)
-        self.btn_clr = QPushButton("Limpar")
+        self.btn_clr = QPushButton(_t("Clear"))
         self.btn_clr.clicked.connect(self._clr)
         for b in (self.btn_add, self.btn_rem, self.btn_clr):
             h.addWidget(b)
         v.addLayout(h)
 
-        gb2 = QGroupBox("Reprodução")
+        gb2 = QGroupBox(_t("Playback"))
         v2 = QVBoxLayout(gb2)
         h2 = QHBoxLayout()
-        self.btn_play = QPushButton("Tocar")
+        self.btn_play = QPushButton(_t("Play"))
         self.btn_play.clicked.connect(self._play)
-        self.btn_stop = QPushButton("Parar")
+        self.btn_stop = QPushButton(_t("Stop"))
         self.btn_stop.clicked.connect(self._stop)
         h2.addWidget(self.btn_play)
         h2.addWidget(self.btn_stop)
         v2.addLayout(h2)
-        self.chk_loop = QCheckBox("Repetir em loop")
+        self.chk_loop = QCheckBox(_t("Loop"))
         self.chk_loop.setChecked(bool(c.loop))
         self.chk_loop.toggled.connect(self._loop)
         v2.addWidget(self.chk_loop)
         self.lbl_dur = QLabel("")
         v2.addWidget(self.lbl_dur)
 
-        gb3 = QGroupBox("Tempos e Quadros")
+        gb3 = QGroupBox(_t("Timings and Frames"))
         v3 = QVBoxLayout(gb3)
         form = QFormLayout()
         self.sb_fps = QSpinBox()
@@ -1564,25 +2179,24 @@ class ScenesPanel(QWidget):
         self.sb_fps.setValue(int(round(c.fps)))
         form.addRow("FPS:", self.sb_fps)
         self.cb_suav = QComboBox()
-        self.cb_suav.addItems(["Suave", "Linear", "Catmull-Rom"])
-        self.cb_suav.setCurrentText(c.suavizacao)
-        form.addRow("Interpolação:", self.cb_suav)
+        _fill_smooth_combo(self.cb_suav, c.suavizacao)
+        form.addRow(_t("Interpolation:"), self.cb_suav)
         self.sb_trans = QDoubleSpinBox()
         self.sb_trans.setRange(0.0, 3600.0)
         self.sb_trans.setDecimals(2)
         self.sb_trans.setSuffix(" s")
         self.sb_trans.setValue(c.transicao_padrao_s)
-        form.addRow("Transição padrão:", self.sb_trans)
+        form.addRow(_t("Default transition:"), self.sb_trans)
         self.sb_hold = QDoubleSpinBox()
         self.sb_hold.setRange(0.0, 3600.0)
         self.sb_hold.setDecimals(2)
         self.sb_hold.setSuffix(" s")
         self.sb_hold.setValue(c.hold_padrao_s)
-        form.addRow("Permanência padrão:", self.sb_hold)
+        form.addRow(_t("Default hold:"), self.sb_hold)
         v3.addLayout(form)
         self.tabela = QTableWidget(0, 3)
         self.tabela.setHorizontalHeaderLabels(
-            ["Cena", "Permanência (s)", "Transição (s)"]
+            [_t("Scene"), _t("Hold (s)"), _t("Transition (s)")]
         )
         self.tabela.setEditTriggers(
             QAbstractItemView.DoubleClicked
@@ -1595,27 +2209,27 @@ class ScenesPanel(QWidget):
             _cab_tab + 4 * _lin_tab + 2 * self.tabela.frameWidth() + 2
         )
         v3.addWidget(self.tabela)
-        self.btn_apply = QPushButton("Aplicar configuração")
+        self.btn_apply = QPushButton(_t("Apply settings"))
         self.btn_apply.clicked.connect(self._apply)
         v3.addWidget(self.btn_apply)
 
-        gb4 = QGroupBox("Exportação")
+        gb4 = QGroupBox(_t("Export"))
         v4 = QVBoxLayout(gb4)
         self.cb_formato = QComboBox()
         self.cb_formato.addItems(
-            ["Sequência de Imagens PNG", "Vídeo MP4"]
+            [_t("PNG image sequence"), _t("MP4 video")]
         )
         v4.addWidget(self.cb_formato)
-        self.btn_export = QPushButton("Exportar Animação")
+        self.btn_export = QPushButton(_t("Export Animation"))
         self.btn_export.clicked.connect(self._export)
         v4.addWidget(self.btn_export)
 
-        gb5 = QGroupBox("Dependências de Vídeo")
+        gb5 = QGroupBox(_t("Video Dependencies"))
         v5 = QVBoxLayout(gb5)
         self.lbl_dep = QLabel("")
         self.lbl_dep.setWordWrap(True)
         v5.addWidget(self.lbl_dep)
-        self.btn_dep = QPushButton("Configurar / Baixar...")
+        self.btn_dep = QPushButton(_t("Configure / Download..."))
         self.btn_dep.clicked.connect(self._deps)
         v5.addWidget(self.btn_dep)
 
@@ -1667,7 +2281,7 @@ class ScenesPanel(QWidget):
     def _apply(self):
         c = self.controller
         c.fps = float(self.sb_fps.value())
-        c.suavizacao = self.cb_suav.currentText()
+        c.suavizacao = _current_smooth(self.cb_suav)
         c.transicao_padrao_s = self.sb_trans.value()
         c.hold_padrao_s = self.sb_hold.value()
         for r in range(self.tabela.rowCount()):
@@ -1683,7 +2297,7 @@ class ScenesPanel(QWidget):
                 pass
         c.save_prefs()
         self.atualizar()
-        c._flash("Configuração aplicada.")
+        c._flash(_t("Settings applied."))
 
     def _export(self):
         modo = "MP4" if self.cb_formato.currentIndex() == 1 else "PNG"
@@ -1718,18 +2332,21 @@ class ScenesPanel(QWidget):
 
         total = sequence_duration(c.cenas)
         self.lbl_dur.setText(
-            f"{len(c.cenas)} cena(s) — {total:.2f}s — "
-            f"~{max(1, int(round(total * c.fps)))} frames"
+            _t(
+                "{n} scene(s) — {total:.2f}s — ~{frames} frames",
+                n=len(c.cenas), total=total,
+                frames=max(1, int(round(total * c.fps))),
+            )
         )
         self.sb_fps.setValue(int(round(c.fps)))
-        self.cb_suav.setCurrentText(c.suavizacao)
+        _fill_smooth_combo(self.cb_suav, c.suavizacao)
         self.sb_trans.setValue(c.transicao_padrao_s)
         self.sb_hold.setValue(c.hold_padrao_s)
         self.chk_loop.setChecked(bool(c.loop))
 
         ok_ff, _ = _ffmpeg_status()
         self.lbl_dep.setText(
-            f"FFmpeg: {'disponível' if ok_ff else 'ausente'}"
+            f"FFmpeg: {_t('available') if ok_ff else _t('missing')}"
         )
 
 
@@ -1841,7 +2458,7 @@ def _attach_scenes_panel(mw, panel):
             melhor, melhor_score = tw, score
     if melhor is not None:
         try:
-            melhor.addTab(panel, "Cenas")
+            melhor.addTab(panel, _t("Scenes"))
             melhor.setCurrentWidget(panel)
             _log(
                 "Painel 'Cenas' adicionado como aba em QTabWidget "
@@ -1879,7 +2496,7 @@ def _attach_scenes_panel(mw, panel):
         except Exception:
             pass
 
-        dock = QDockWidget("Cenas", mw)
+        dock = QDockWidget(_t("Scenes"), mw)
         dock.setObjectName("igz_tb_scenes_dock")
         dock.setWidget(panel)
         dock.setAllowedAreas(
@@ -1900,7 +2517,7 @@ def _attach_scenes_panel(mw, panel):
 
     # 3) Fallback: dock próprio na área direita.
     if hasattr(mw, "addDockWidget"):
-        dock = QDockWidget("Cenas", mw)
+        dock = QDockWidget(_t("Scenes"), mw)
         dock.setObjectName("igz_tb_scenes_dock")
         dock.setWidget(panel)
         dock.setAllowedAreas(
@@ -1922,7 +2539,7 @@ def create_toolbar(main_window, viewport=None, app=None):
 
     toolbar = QToolBar("Scenes", main_window)
     toolbar.setObjectName("igz_tb_scenes")
-    toolbar.setWindowTitle("Scenes")
+    toolbar.setWindowTitle(_t("Scenes"))
 
     def make_action(nome, icone_base, tooltip, callback):
         icon = _load_themed_icon(icone_base, main_window)
@@ -1934,24 +2551,25 @@ def create_toolbar(main_window, viewport=None, app=None):
 
     toolbar.addAction(
         make_action(
-            "Adicionar Cena Atual", "scene_add",
-            "Captura eye, target e fov da câmera atual como uma nova cena.",
+            _t("Add Current Scene"), "scene_add",
+            _t("Captures the current camera's eye, target and fov as a "
+               "new scene."),
             controller.adicionar_cena_atual,
         )
     )
 
     toolbar.addAction(
         make_action(
-            "Remover Cena Selecionada", "scene_remove",
-            "Remove a cena atualmente selecionada da lista.",
+            _t("Remove Selected Scene"), "scene_remove",
+            _t("Removes the currently selected scene from the list."),
             controller.remover_cena_selecionada,
         )
     )
 
     toolbar.addAction(
         make_action(
-            "Limpar Cenas", "scene_remove",
-            "Remove TODAS as cenas da lista.",
+            _t("Clear Scenes"), "scene_remove_all",
+            _t("Removes ALL scenes from the list."),
             controller.limpar_cenas,
         )
     )
@@ -1960,16 +2578,16 @@ def create_toolbar(main_window, viewport=None, app=None):
 
     toolbar.addAction(
         make_action(
-            "Tocar Animação de Cenas", "scene_play",
-            "Percorre suavemente as cenas armazenadas na viewport.",
+            _t("Play Scene Animation"), "scene_play",
+            _t("Smoothly plays through the scenes stored in the viewport."),
             controller.tocar_animacao,
         )
     )
 
     toolbar.addAction(
         make_action(
-            "Parar Animação", "scene_stop",
-            "Interrompe a animação de cenas em execução.",
+            _t("Stop Animation"), "scene_stop",
+            _t("Stops the running scene animation."),
             controller.parar_animacao,
         )
     )
@@ -1978,16 +2596,16 @@ def create_toolbar(main_window, viewport=None, app=None):
 
     toolbar.addAction(
         make_action(
-            "Configurar Tempos e Quadros", "scene_configure",
-            "Configura FPS, interpolação, loop e os tempos por cena.",
+            _t("Configure Timings and Frames"), "scene_configure",
+            _t("Configures FPS, interpolation, loop and per-scene timings."),
             controller.configurar_tempos,
         )
     )
 
     toolbar.addAction(
         make_action(
-            "Exportar Animação", "scene_export",
-            "Exporta a animação como sequência PNG ou vídeo MP4.",
+            _t("Export Animation"), "scene_export",
+            _t("Exports the animation as a PNG sequence or MP4 video."),
             controller.exportar_animacao,
         )
     )
@@ -1997,8 +2615,8 @@ def create_toolbar(main_window, viewport=None, app=None):
     if _find_ffmpeg() is None:
         toolbar.addAction(
             make_action(
-                "Dependências de Vídeo", "scene_configure",
-                "Configurar/baixar o FFmpeg para exportar MP4.",
+                _t("Video Dependencies"), "scene_ffmpeg",
+                _t("Configure/download FFmpeg to export MP4."),
                 lambda: DependencyDialog(main_window).exec(),
             )
         )
@@ -2013,15 +2631,15 @@ def create_toolbar(main_window, viewport=None, app=None):
     toolbar.addSeparator()
     if dock is not None and hasattr(dock, "toggleViewAction"):
         toggle = dock.toggleViewAction()
-        toggle.setText("Painel de Cenas")
-        toggle.setToolTip("Mostrar/ocultar o painel de cenas.")
+        toggle.setText(_t("Scenes Panel"))
+        toggle.setToolTip(_t("Show/hide the scenes panel."))
         toggle.setIcon(_load_themed_icon("scene_panel", main_window))
         toolbar.addAction(toggle)
     elif tab_widget is not None:
         toolbar.addAction(
             make_action(
-                "Painel de Cenas", "scene_panel",
-                "Ir para a aba de cenas.",
+                _t("Scenes Panel"), "scene_panel",
+                _t("Go to the scenes tab."),
                 lambda: tab_widget.setCurrentWidget(panel),
             )
         )
