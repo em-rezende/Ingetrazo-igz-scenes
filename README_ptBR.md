@@ -14,10 +14,9 @@ como sequência de imagens PNG ou vídeo MP4.
 
 ---
 
-![IngeTrazo com a barra "Scenes" e o painel lateral na tela](screenshots/igz-tb-scenes-main.png)
+![IngeTrazo com a barra "Scenes" e o painel lateral na tela](screenshots/igz-tb-scenes.png)
 
-*A barra **Scenes** e o painel lateral **Cenas**. (Captura de tela a ser
-adicionada antes da publicação.)*
+*A barra **Scenes** e o painel lateral **Cenas**.*
 
 ---
 
