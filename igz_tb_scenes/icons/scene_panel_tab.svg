@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW 2026 -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="5.4186mm" height="5.4186mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 541.86 541.86"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:xodm="http://www.corel.com/coreldraw/odm/2003"
+ xmlns:svg="http://www.w3.org/2000/svg">
+ <defs>
+  <style type="text/css">
+   <![CDATA[
+    .str0 {stroke:#373435;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:22.9256}
+    .fil0 {fill:#FEFEFE}
+    .fil1 {fill:#848688}
+   ]]>
+  </style>
+ </defs>
+ <g id="Camada_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <path class="fil0" d="M466.91 183.76c15.36,6.88 26.1,22.36 26.1,40.22l0 225.75c0,24.2 -19.69,44.01 -43.91,44.01l-356.33 0c-24.21,0 -43.92,-19.82 -43.92,-44.01l0 -225.75c0,-6 1.23,-11.88 3.57,-17.32l-2.81 -10.51c-6.21,-23.28 7.73,-47.61 31.02,-53.88l344.2 -92.64c23.33,-6.27 47.58,7.81 53.8,31.14l13.62 51.07c5.69,21.33 -5.51,43.51 -25.34,51.92z"/>
+  <g>
+   <path class="fil1 str0" d="M334.25 199.58l121.87 -32.8c12.91,-3.48 20.64,-16.93 17.18,-29.89l-13.62 -51.07c-3.46,-12.97 -16.87,-20.72 -29.75,-17.26l-344.19 92.64c-12.89,3.47 -20.63,16.94 -17.18,29.89l4.85 18.2c-3.09,4.09 -4.94,9.19 -4.94,14.69l0 225.75c0,13.41 10.93,24.4 24.29,24.4l356.34 0c13.36,0 24.29,-10.98 24.29,-24.4l0 -225.75c0,-13.42 -10.95,-24.4 -24.29,-24.4l-114.85 0z"/>
+   <path class="fil0" d="M436.95 453.8l-332.04 0c-8.87,0 -16.19,-7.32 -16.19,-16.27l0 -120.01c0,-8.95 7.28,-16.27 16.19,-16.27l332.04 0c8.91,0 16.19,7.35 16.19,16.27l0 120.01c0,8.92 -7.32,16.27 -16.19,16.27zm-163.33 -172.88l49.51 0 25.23 -61 -49.5 0 -25.24 61zm91.1 0l49.5 0 25.24 -61 -49.5 0 -25.24 61zm-182.2 0l49.51 0 25.24 -61 -49.51 0 -25.24 61zm171.07 -107.6l-47.82 12.87 -40.1 -52.36 47.82 -12.87 40.1 52.36zm-88 23.69l-47.82 12.87 -40.09 -52.36 47.81 -12.88 40.1 52.37zm175.99 -47.37l-47.82 12.87 -40.1 -52.36 47.82 -12.87 40.1 52.36zm-303.25 67.74c9.78,0 17.71,7.96 17.71,17.79 0,9.83 -7.93,17.8 -17.71,17.8 -9.79,0 -17.72,-7.97 -17.72,-17.8 0,-9.83 7.93,-17.79 17.72,-17.79z"/>
+  </g>
+ </g>
+</svg>

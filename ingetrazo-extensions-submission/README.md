@@ -1,6 +1,6 @@
 # Submission bundle — IngeTrazo extension catalog
 
-> **Submission bundle for the IngeTrazo extension catalog** (v1.0.0). These
+> **Submission bundle for the IngeTrazo extension catalog** (v1.1.0). These
 > are the files submitted in the catalog pull request
 > <https://github.com/ingelibre/ingetrazo-extensions/pull/55>.
 
@@ -16,12 +16,12 @@ was opened with the template checklist filled in.
 
 ## Preconditions (all met)
 
-- The `download` URL points at the **v1.0.0** GitHub Release asset
+- The `download` URL points at the **v1.1.0** GitHub Release asset
   `igz_tb_scenes.zip`, so create that tag/release in this repository first and
   upload `dist/igz_tb_scenes.zip` as the asset with that exact name.
 - The `sha256` in the entry must match that asset byte-for-byte. Rebuild with
-  `packaging/build_extension.ps1` (or `packaging/build_extension.py`) if the
-  code changed, and paste the value it prints.
+  `packaging/build_extension.py` (or `packaging/build_extension.ps1`, which
+  delegates to it) if the code changed, and paste the value it prints.
 - Add a screenshot named `igz_tb_scenes.png` (the `screenshot` field refers to
   it); the extension shows a top toolbar and a side panel.
 

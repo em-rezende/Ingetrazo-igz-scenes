@@ -8,8 +8,8 @@
 #
 # The catalog installs ONE file per entry: a .py file, or a .zip holding a
 # single folder with an __init__.py (see TEMPLATE.toml in that repository).
-# This extension uses the zip form because it ships one module plus a
-# folder of SVG icons.
+# This extension uses the zip form because it ships a package with several
+# modules (core/), translation files (i18n/) and SVG icons (icons/).
 #
 # The archive is built deterministically on purpose: fixed timestamps,
 # sorted entries and a fixed create-system, so its SHA-256 changes ONLY
@@ -26,6 +26,9 @@
 # The printed SHA-256 is what goes into ``extensions/igz_tb_scenes.toml``;
 # upload the very same dist/igz_tb_scenes.zip as a GitHub Release asset of
 # the tag named in the entry's ``download`` URL.
+#
+# This is the canonical builder: packaging/build_extension.ps1 delegates to
+# it when Python is available, so the published fingerprint is reproducible.
 # =========================================================================
 from __future__ import annotations
 
@@ -42,28 +45,30 @@ DIST = os.path.join(ROOT, "dist")
 PACKAGE = "igz_tb_scenes"
 ZIP_NAME = f"{PACKAGE}.zip"
 
-#: Modules copied verbatim from the repository root.
-MODULES = ["igz_tb_scenes.py"]
+#: Source tree copied verbatim (``__init__.py`` + core/ + i18n/ + icons/).
+PACKAGE_DIR = os.path.join(ROOT, PACKAGE)
 
 #: Documentation bundled inside the package (optional but tidy).
 EXTRA_FILES = ["LICENSE", "README.md", "README_ptBR.md", "THIRD-PARTY.md"]
 
-#: The package entry point (defines setup(app)); lives in the repo, not the
-#: root, so the repository root stays a valid manual-install layout.
-INIT_SRC = os.path.join(HERE, PACKAGE, "__init__.py")
+#: Never bundled: caches, bytecode and OS metadata.
+EXCLUDED_DIRS = {"__pycache__", ".git", ".mypy_cache", ".pytest_cache"}
+EXCLUDED_SUFFIXES = (".pyc", ".pyo", ".pyd")
+EXCLUDED_NAMES = {"Thumbs.db", "Desktop.ini", ".DS_Store"}
 
-#: Icons folder in the repository root.
-ICONS_DIR = os.path.join(ROOT, "icons")
+#: Text files are normalised to LF before zipping, so the fingerprint does not
+#: depend on the Git line-ending settings of the machine that builds it.
+TEXT_SUFFIXES = (".py", ".md", ".json", ".svg", ".txt")
 
 #: Fixed timestamp so the archive is byte-for-byte reproducible.
 FIXED_DATE = (2026, 1, 1, 0, 0, 0)
 
 
 def read_version() -> str:
-    """Read the version from the module header, so it never drifts."""
-    with open(os.path.join(ROOT, "igz_tb_scenes.py"), encoding="utf-8") as fh:
+    """Read ``__version__`` from the package entry point, so it never drifts."""
+    with open(os.path.join(PACKAGE_DIR, "__init__.py"), encoding="utf-8") as fh:
         for line in fh:
-            match = re.match(r"#\s*Version:\s*(\S+)", line)
+            match = re.match(r"\s*__version__\s*=\s*['\"]([^'\"]+)['\"]", line)
             if match:
                 return match.group(1)
     return "0.0.0"
@@ -74,28 +79,35 @@ def _read(path: str) -> bytes:
         return fh.read()
 
 
+def _read_entry(path: str) -> bytes:
+    """Read a file, normalising text files to LF line endings."""
+    data = _read(path)
+    if path.lower().endswith(TEXT_SUFFIXES):
+        data = data.replace(b"\r\n", b"\n")
+    return data
+
+
 def collect_entries() -> list[tuple[str, bytes]]:
     """Return ``(arcname, data)`` for every file, sorted by name."""
-    entries: list[tuple[str, bytes]] = []
+    files: dict[str, bytes] = {}
 
-    entries.append((f"{PACKAGE}/__init__.py", _read(INIT_SRC)))
+    # The whole package tree: __init__.py, core/*.py, i18n/*.json, icons/*.svg.
+    for base, dirs, names in os.walk(PACKAGE_DIR):
+        dirs[:] = sorted(d for d in dirs if d not in EXCLUDED_DIRS)
+        for name in sorted(names):
+            if name in EXCLUDED_NAMES or name.lower().endswith(EXCLUDED_SUFFIXES):
+                continue
+            path = os.path.join(base, name)
+            rel = os.path.relpath(path, PACKAGE_DIR).replace(os.sep, "/")
+            files[f"{PACKAGE}/{rel}"] = _read_entry(path)
 
-    for name in MODULES:
-        entries.append((f"{PACKAGE}/{name}", _read(os.path.join(ROOT, name))))
-
+    # Docs stay at the repository root but ship inside the package folder.
     for name in EXTRA_FILES:
         path = os.path.join(ROOT, name)
         if os.path.isfile(path):
-            entries.append((f"{PACKAGE}/{name}", _read(path)))
+            files.setdefault(f"{PACKAGE}/{name}", _read_entry(path))
 
-    if os.path.isdir(ICONS_DIR):
-        for name in sorted(os.listdir(ICONS_DIR)):
-            path = os.path.join(ICONS_DIR, name)
-            if os.path.isfile(path) and name.lower().endswith(".svg"):
-                entries.append((f"{PACKAGE}/icons/{name}", _read(path)))
-
-    entries.sort(key=lambda item: item[0])
-    return entries
+    return sorted(files.items(), key=lambda item: item[0])
 
 
 def build() -> str:

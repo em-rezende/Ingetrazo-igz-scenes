@@ -7,8 +7,8 @@ reproduzem como uma **animação** suave de câmera e **exportam** o resultado
 como sequência de imagens PNG ou vídeo MP4.
 
 - **Autor:** Ezequiel M. Rezende
-- **Data:** 2026-10-07
-- **Versão:** 1.0.0
+- **Data:** 2026-10-14
+- **Versão:** 1.1.0 (Refatorada)
 - **Licença:** [GPL-3.0-or-later](https://www.gnu.org/licenses/gpl-3.0.html)
   (mesma do IngeTrazo — ver [LICENSE](https://github.com/ingelibre/ingetrazo/blob/main/LICENSE))
 
@@ -22,29 +22,41 @@ como sequência de imagens PNG ou vídeo MP4.
 
 ## Arquivos
 
-```
-<plugins>/
-├── igz_tb_scenes.py         # a extensão inteira
-├── README.md                # este arquivo (inglês)
-├── README_ptBR.md           # esta versão em português
-├── LICENSE                  # texto completo da GPL-3.0
-├── THIRD-PARTY.md           # avisos de terceiros
-└── icons/
-    ├── scene_add.svg              / scene_add_light.svg
-    ├── scene_remove.svg           / scene_remove_light.svg
-    ├── scene_remove_all.svg       / scene_remove_all_light.svg
-    ├── scene_play.svg             / scene_play_light.svg
-    ├── scene_stop.svg             / scene_stop_light.svg
-    ├── scene_configure.svg        / scene_configure_light.svg
-    ├── scene_export.svg           / scene_export_light.svg
-    ├── scene_ffmpeg.svg           / scene_ffmpeg_light.svg
-    └── scene_panel.svg            / scene_panel_light.svg
-```
+A extensão agora está organizada como um pacote Python para facilitar a manutenção:
 
-`igz_tb_scenes.py` é um **plugin autônomo de arquivo único**: define
-`setup(app)`, então funciona quando colocado diretamente na pasta de plugins.
-O empacotador do catálogo o envolve em um `.zip` de uma pasta só (ver
-[Instalação](#instalação)).
+```text
+<plugins>/
+└── igz_tb_scenes/
+    ├── __init__.py            # Ponto de entrada e lógica de i18n
+    ├── README.md              # Arquivo em inglês
+    ├── README_ptBR.md         # Este arquivo em português
+    ├── LICENSE                # Texto completo da GPL-3.0
+    ├── THIRD-PARTY.md         # Avisos de terceiros
+    ├── i18n/                  # Arquivos de tradução
+    │   ├── en.json            # (Vazio, a fonte é o inglês)
+    │   ├── pt-BR.json
+    │   ├── es.json
+    │   ├── de.json
+    │   ├── fr.json
+    │   ├── it.json
+    │   └── zh.json
+    ├── icons/                 # Ícones SVG (variantes dark e _light)
+    │   ├── scene_add.svg      / scene_add_light.svg
+    │   ├── scene_remove.svg   / scene_remove_light.svg
+    │   ├── ...
+    │   └── scene_panel.svg    / scene_panel_light.svg
+    └── core/                  # Código-fonte modular
+        ├── __init__.py
+        ├── config.py          # Persistência JSON, QSettings
+        ├── dialog_helpers.py  # Auxiliares para combos e normalização
+        ├── dialogs.py         # Diálogos de Dependências, Config e Exportação
+        ├── ffmpeg.py          # Download e renderização via FFmpeg
+        ├── math_utils.py      # Smoothstep, interpolação Catmull-Rom
+        ├── model.py           # Estrutura da Cena, matemática da timeline
+        ├── panel.py           # Interface do painel lateral (QWidget)
+        ├── controller.py      # Lógica de negócios (conecta Model e UI)
+        └── toolbar.py         # Criação da toolbar e anexo do painel
+```
 
 ---
 
@@ -59,12 +71,12 @@ tempo leva para mover-se até a próxima) por cena.
 |--------------------------------|--------------------|
 | **Adicionar Cena Atual**       | `scene_add`        |
 | **Remover Cena Selecionada**   | `scene_remove`     |
-| **Limpar Cenas**               | `scene_remove`     |
+| **Limpar Cenas**               | `scene_remove_all` |
 | **Tocar Animação de Cenas**    | `scene_play`       |
 | **Parar Animação**             | `scene_stop`       |
 | **Configurar Tempos e Quadros**| `scene_configure`  |
 | **Exportar Animação**          | `scene_export`     |
-| **Dependências de Vídeo***     | `scene_configure`  |
+| **Dependências de Vídeo***     | `scene_ffmpeg`     |
 | **Painel de Cenas** (toggle)   | `scene_panel`      |
 
 \* O botão **Dependências de Vídeo** só aparece quando o FFmpeg não é
@@ -78,10 +90,9 @@ seguem a paleta clara/escura da interface (cada ícone tem uma variante
 
 ## O painel lateral "Cenas"
 
-O painel é inserido como **aba** ao lado dos painéis laterais do próprio
-IngeTrazo (Propriedades / BIM / Terreno / Renderizar / IA) quando o
-hospedeiro permite; caso contrário, cai para um dock próprio ("Cenas"). Usa
-divisores arrastáveis:
+O painel é registrado usando a **API oficial do hospedeiro**
+(`app.add_panel`), o que garante que ele apareça corretamente no menu
+"Janela ▸ Painéis" do IngeTrazo.
 
 - **Cenas** — a lista (fixada em 5 linhas visíveis) mais **Adicionar**,
   **Remover** e **Limpar**.
@@ -94,8 +105,15 @@ divisores arrastáveis:
 - **Dependências de Vídeo** — o estado do FFmpeg e um botão **Configurar /
   Baixar…**.
 
-O botão **Painel de Cenas** da barra mostra/esconde o painel (uma
-`toggleViewAction` de dock, ou uma ação "ir para a aba Cenas").
+### O botão "Painel de Cenas" (Lógica de 3 Estados)
+
+O botão da barra de ferramentas usa um toggle inteligente de 3 estados:
+1. **Escondido**: Clicar mostra o painel e o traz para frente.
+2. **Visível, mas atrás de outras abas**: Clicar traz o painel para frente (não o esconde).
+3. **Visível e na frente**: Clicar esconde o painel.
+
+O painel usa divisores arrastáveis para ajustar a altura das listas.
+O ícone na aba do painel é definido usando `app._set_panel_icon`.
 
 ---
 
@@ -152,7 +170,7 @@ capturar quadros. As duas podem ser instaladas ao mesmo tempo.
 
 ## Compatibilidade
 
-- **IngeTrazo 0.5.7** (a versão com que foi testado).
+- **IngeTrazo 0.5.7+** (usando a API `app.add_panel`).
 - **PySide6 / Qt 6** — o plugin é Python puro; usa a câmera da viewport do
   aplicativo e o framebuffer capturável.
 - Windows em primeiro lugar (o download do FFmpeg aponta para builds do
@@ -160,32 +178,10 @@ capturar quadros. As duas podem ser instaladas ao mesmo tempo.
 
 ### Idioma & internacionalização
 
-Os tooltips da barra e os rótulos do painel estão, por ora, escritos em
-**português** (`Adicionar`, `Tocar`, …), diferentemente da barra
-*Styles/Shadows*, que espelha as strings traduzíveis do menu do IngeTrazo.
-Tornar estes rótulos traduzíveis está listado em
-[Melhorias futuras](#melhorias-futuras-opcional).
-
----
-
-## Pontos frágeis (dependem do hospedeiro)
-
-- **Descoberta da janela/viewport** — `setup(app)` localiza a janela
-  principal por `QApplication.topLevelWidgets()` ou atributos de `app`, e a
-  viewport pelo nome da classe. Hospedeiros incomuns podem exigir ajustes.
-- **Encaixe do painel** — o "portador" (dock/aba) é encontrado por heurística
-  (procura um grupo de abas intitulado Propriedades/BIM/Terreno/Renderizar/
-  IA). Se nada casa, o painel cai para um dock próprio.
-- **Nomes dos atributos da câmera** — `eye()`, `target` e `fov_deg` / `fov` /
-  `field_of_view` são testados de forma defensiva.
-
-### Se a API 0.x quebrar
-
-Os pontos de integração são intencionalmente poucos: `setup(app)`, leitura/
-escrita da câmera, `app.document_data` / `set_document_data`,
-`on_document_changed` e `viewport.flash_status`. Se um IngeTrazo futuro mudar
-isso, só esses pequenos auxiliares dentro de `igz_tb_scenes.py` precisarão
-de ajuste.
+A extensão está **totalmente internacionalizada**. As strings da interface
+são escritas em inglês no código-fonte e traduzidas em tempo de execução
+usando arquivos JSON na pasta `i18n/`. Ela corresponde automaticamente ao
+idioma configurado no IngeTrazo (PT-BR, EN, ES, DE, FR, IT, ZH).
 
 ---
 
@@ -197,15 +193,13 @@ de ajuste.
    de plugins do usuário: `%APPDATA%\IngeTrazo\plugins\` no Windows,
    `~/.local/share/ingetrazo/plugins/` no Linux).
 2. Crie uma pasta chamada **`igz_tb_scenes`** dentro dela.
-3. Copie para dentro **`igz_tb_scenes.py`**, a pasta **`icons/`** e o
-   **ponto de entrada do pacote**
-   (`packaging/igz_tb_scenes/__init__.py`, renomeado para `__init__.py`).
+3. Copie o **conteúdo completo** desta extensão (as pastas `core/`, `i18n/`,
+   `icons/` e o arquivo `__init__.py`) para dentro dela.
 4. Reinicie o IngeTrazo. A barra **Scenes** aparece na área superior e o
    painel **Cenas** entra nos painéis laterais.
 
-> A pasta **precisa** conter um `__init__.py` que carregue o
-> `igz_tb_scenes.py` (o de `packaging/igz_tb_scenes/`). Um ponto de entrada
-> ausente ou errado produz, silenciosamente, **nenhuma** barra e **nenhum**
+> A pasta **precisa** conter o `__init__.py` e a pasta `core/`. Um ponto de
+> entrada ausente produz, silenciosamente, **nenhuma** barra e **nenhum**
 > painel.
 
 ### Pelo catálogo de extensões do IngeTrazo
@@ -239,16 +233,11 @@ Empacotada para o catálogo da comunidade em
 
 Nenhuma destas é necessária — a extensão funciona como está.
 
-1. **Rótulos traduzíveis** — passar as strings da barra/painel pelo
-   `core.i18n` do hospedeiro, em vez do português fixo.
-2. **Subclasse `Tool`** — uma entrada "Cenas…" no menu **Extensions** com
-   atalho, para o usuário reabrir a barra se ela for fechada.
-3. **Migrar para `app.add_panel(...)`** para 100% de conformidade com a API
-   (integração nativa com a bandeja lateral, em vez da busca heurística de
-   hospedeiro).
-4. **Suavização por cena** — um seletor de curva por keyframe.
-5. **Linha do tempo na viewport** — um scrubber e um atalho "adicionar
+1. **Linha do tempo na viewport** — um scrubber e um atalho "adicionar
    atual".
+2. **Suavização por cena** — um seletor de curva por keyframe.
+3. **Subclasse `Tool`** — uma entrada "Cenas…" no menu **Extensions** com
+   atalho, para o usuário reabrir a barra se ela for fechada.
 
 ---
 
@@ -269,23 +258,4 @@ Este programa é distribuído na esperança de ser útil, mas **sem qualquer
 garantia**; sem mesmo a garantia implícita de **comercialização** ou
 **adequação a um propósito específico**. Veja a GNU General Public License
 para mais detalhes.
-
----
-
-### Tabela de correspondência (EN ↔ PT-BR)
-
-| Seção | Inglês | Português |
-|---|---|---|
-| Título | Extensions — "Scenes" (Scene Manager) | Extensão — "Scenes" (Gerenciador de Cenas) |
-| Arquivos | Files | Arquivos |
-| Barra | The "Scenes" Toolbar | A barra "Scenes" |
-| Painel | The "Cenas" Side Panel | O painel lateral "Cenas" |
-| Documento | Scenes, the `.igz` file and preferences | Cenas, o arquivo `.igz` e preferências |
-| Interpolação | Camera interpolation | Interpolação da câmera |
-| Exportação | Export | Exportação |
-| Compatibilidade | Compatibility | Compatibilidade |
-| Pontos frágeis | Fragile points | Pontos frágeis |
-| Instalação | Installation | Instalação |
-| Uso | Usage | Uso |
-| Melhorias futuras | Future improvements | Melhorias futuras |
-| Licença | License | Licença |
+```

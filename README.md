@@ -6,8 +6,8 @@ keyframes), play them back as a smooth camera **animation**, and **export**
 the result as a PNG image sequence or an MP4 video.
 
 - **Author:** Ezequiel M. Rezende
-- **Date:** 2026-10-07
-- **Version:** 1.0.0
+- **Date:** 2026-10-14
+- **Version:** 1.1.0 (Refactored)
 - **License:** [GPL-3.0-or-later](https://www.gnu.org/licenses/gpl-3.0.html)
   (same as IngeTrazo — see [LICENSE](https://github.com/ingelibre/ingetrazo/blob/main/LICENSE))
 
@@ -21,29 +21,41 @@ the result as a PNG image sequence or an MP4 video.
 
 ## Files
 
-```
-<plugins>/
-├── igz_tb_scenes.py         # the whole extension
-├── README.md                # this file
-├── README_ptBR.md           # Portuguese version
-├── LICENSE                  # full GPL-3.0 text
-├── THIRD-PARTY.md           # third-party notices
-└── icons/
-    ├── scene_add.svg              / scene_add_light.svg
-    ├── scene_remove.svg           / scene_remove_light.svg
-    ├── scene_remove_all.svg       / scene_remove_all_light.svg
-    ├── scene_play.svg             / scene_play_light.svg
-    ├── scene_stop.svg             / scene_stop_light.svg
-    ├── scene_configure.svg        / scene_configure_light.svg
-    ├── scene_export.svg           / scene_export_light.svg
-    ├── scene_ffmpeg.svg           / scene_ffmpeg_light.svg
-    └── scene_panel.svg            / scene_panel_light.svg
-```
+The extension is now organized as a Python package for better maintainability:
 
-`igz_tb_scenes.py` is a **standalone single-file plugin**: it defines
-`setup(app)`, so it works when dropped directly into the plugins folder.
-The catalog build wraps it in a one-folder `.zip` (see
-[Installation](#installation)).
+```text
+<plugins>/
+└── igz_tb_scenes/
+    ├── __init__.py            # Entry point and i18n logic
+    ├── README.md              # This file
+    ├── README_ptBR.md         # Portuguese version
+    ├── LICENSE                # Full GPL-3.0 text
+    ├── THIRD-PARTY.md         # Third-party notices
+    ├── i18n/                  # Translation files
+    │   ├── en.json            # (Empty, source is English)
+    │   ├── pt-BR.json
+    │   ├── es.json
+    │   ├── de.json
+    │   ├── fr.json
+    │   ├── it.json
+    │   └── zh.json
+    ├── icons/                 # SVG Icons (dark and _light variants)
+    │   ├── scene_add.svg      / scene_add_light.svg
+    │   ├── scene_remove.svg   / scene_remove_light.svg
+    │   ├── ...
+    │   └── scene_panel.svg    / scene_panel_light.svg
+    └── core/                  # Modular source code
+        ├── __init__.py
+        ├── config.py          # QSettings, JSON persistence
+        ├── dialog_helpers.py  # Combo box filling, normalization
+        ├── dialogs.py         # Dependency, Config, and Export dialogs
+        ├── ffmpeg.py          # FFmpeg downloader and renderer
+        ├── math_utils.py      # Smoothstep, Catmull-Rom interpolation
+        ├── model.py           # Scene data structure, timeline math
+        ├── panel.py           # Side panel UI (QWidget)
+        ├── controller.py      # Business logic (connects Model & UI)
+        └── toolbar.py         # Toolbar creation and panel attachment
+```
 
 ---
 
@@ -56,44 +68,47 @@ it takes to move to the next one).
 
 | Button                         | Icon               |
 |--------------------------------|--------------------|
-| **Adicionar Cena Atual**       | `scene_add`        |
-| **Remover Cena Selecionada**   | `scene_remove`     |
-| **Limpar Cenas**               | `scene_remove`     |
-| **Tocar Animação de Cenas**    | `scene_play`       |
-| **Parar Animação**             | `scene_stop`       |
-| **Configurar Tempos e Quadros**| `scene_configure`  |
-| **Exportar Animação**          | `scene_export`     |
-| **Dependências de Vídeo***     | `scene_configure`  |
-| **Painel de Cenas** (toggle)   | `scene_panel`      |
+| **Add Current Scene**          | `scene_add`        |
+| **Remove Selected Scene**      | `scene_remove`     |
+| **Clear Scenes**               | `scene_remove_all` |
+| **Play Scene Animation**       | `scene_play`       |
+| **Stop Animation**             | `scene_stop`       |
+| **Configure Timings & Frames** | `scene_configure`  |
+| **Export Animation**           | `scene_export`     |
+| **Video Dependencies***        | `scene_ffmpeg`     |
+| **Scenes Panel** (toggle)      | `scene_panel`      |
 
-\* The **Dependências de Vídeo** button only appears when FFmpeg cannot be
-found; with FFmpeg present the MP4 export already works.
+\* The **Video Dependencies** button only appears when FFmpeg cannot be
+found; with FFmpeg present, the MP4 export already works.
 
 The toolbar is added to the **top** toolbar area (`igz_tb_scenes`), and the
 icons follow the light/dark UI palette (each icon has a `_light` variant).
 
 ---
 
-## The "Cenas" Side Panel
+## The "Scenes" Side Panel
 
-The panel is inserted as a **tab** next to IngeTrazo's own side panels
-(Propriedades / BIM / Terreno / Renderizar / IA) when the host allows it,
-falling back to its own dock ("Cenas") otherwise. It uses draggable
-splitters:
+The panel is registered using the **host's official API** (`app.add_panel`),
+which ensures it appears correctly in the IngeTrazo "Window ▸ Panels" menu.
 
-- **Cenas** — the list (fixed at 5 visible rows) plus **Adicionar**,
-  **Remover** and **Limpar**.
-- **Reprodução** — **Tocar**, **Parar**, a **Repetir em loop** checkbox and
+- **Scenes** — the list (fixed at 5 visible rows) plus **Add**,
+  **Remove** and **Clear**.
+- **Playback** — **Play**, **Stop**, a **Loop** checkbox and
   a live duration / frame-count label.
-- **Tempos e Quadros** — FPS, interpolation, default transition, default
-  hold, a per-scene table (fixed at 4 visible rows) and **Aplicar
-  configuração**.
-- **Exportação** — format (PNG sequence / MP4) and **Exportar Animação**.
-- **Dependências de Vídeo** — the FFmpeg status and a **Configurar /
-  Baixar…** button.
+- **Timings and Frames** — FPS, interpolation, default transition, default
+  hold, a per-scene table (fixed at 4 visible rows) and **Apply settings**.
+- **Export** — format (PNG sequence / MP4) and **Export Animation**.
+- **Video Dependencies** — the FFmpeg status and a **Configure / Download...** button.
 
-The **Painel de Cenas** toolbar button shows/hides the panel (a dock
-`toggleViewAction`, or a "go to the Cenas tab" action).
+### "Scenes Panel" Button (3-State Logic)
+
+The toolbar button uses a smart 3-state toggle:
+1. **Hidden**: Clicking shows the panel and brings it to the front.
+2. **Visible but behind other tabs**: Clicking brings it to the front (it does not hide it).
+3. **Visible and in front**: Clicking hides it.
+
+The panel uses draggable splitters to adjust the height of the lists.
+The icon on the panel's tab is set using `app._set_panel_icon`.
 
 ---
 
@@ -109,11 +124,11 @@ The **Painel de Cenas** toolbar button shows/hides the panel (a dock
 
 ---
 
-## Camera interpolation
+## Camera Interpolation
 
-Three modes are offered under **Interpolação**:
+Three modes are offered under **Interpolation**:
 
-- **Suave** — smoothstep (ease in/out).
+- **Smooth** — smoothstep (ease in/out).
 - **Linear** — constant speed.
 - **Catmull-Rom** — a spline through the keyframes, for organically curving
   camera paths.
@@ -122,20 +137,19 @@ Three modes are offered under **Interpolação**:
 
 ## Export
 
-**Exportar Animação** asks for format, FPS and **output size** (with a
+**Export Animation** asks for format, FPS and **output size** (with a
 "keep screen aspect" lock and a "current screen size" reset), then renders
 each frame by grabbing the framebuffer:
 
-- **Sequência de Imagens PNG** — writes `scene_00000.png`, … to a folder.
+- **PNG Image Sequence** — writes `scene_00000.png`, … to a folder.
   No external dependency.
-- **Vídeo MP4** — renders PNG frames to a temp folder and muxes them with
+- **MP4 Video** — renders PNG frames to a temp folder and muxes them with
   **FFmpeg** (`libx264`, `yuv420p`, even dimensions). Needs FFmpeg; the
   plugin finds it in the saved path, on the `PATH`, in its local data
   folder, or in common locations, and can **download** a build on request
-  (**Configurar / Baixar…**).
+  (**Configure / Download...**).
 
-FFmpeg is optional and **not bundled** — see
-[THIRD-PARTY.md](THIRD-PARTY.md).
+FFmpeg is optional and **not bundled** — see [THIRD-PARTY.md](THIRD-PARTY.md).
 
 ---
 
@@ -150,7 +164,7 @@ grabbing frames. Both can be installed at the same time.
 
 ## Compatibility
 
-- **IngeTrazo 0.5.7** (the version this was tested with).
+- **IngeTrazo 0.5.7+** (using the `app.add_panel` API).
 - **PySide6 / Qt 6** — the plugin is pure Python; it uses the in-app
   viewport camera and the grabbable framebuffer.
 - Windows-first (the FFmpeg download points at Windows builds), but the
@@ -158,31 +172,10 @@ grabbing frames. Both can be installed at the same time.
 
 ### Language & internationalization
 
-The toolbar tooltips and the panel labels are currently written in
-**Portuguese** (`Adicionar`, `Tocar`, …), unlike the *Styles/Shadows*
-toolbar which mirrors IngeTrazo's translatable menu strings. Making these
-labels translatable is listed under
-[Future improvements](#future-improvements-optional).
-
----
-
-## Fragile points (things that depend on the host)
-
-- **Main window / viewport discovery** — `setup(app)` locates the main
-  window through `QApplication.topLevelWidgets()` or `app` attributes, and
-  the viewport by class name. Unusual hosts may need adjustments.
-- **Panel attachment** — the dock/tab "host" is found heuristically (it
-  looks for a tab group titled Propriedades/BIM/Terreno/Renderizar/IA). If
-  nothing matches, the panel falls back to its own dock.
-- **Camera attribute names** — `eye()`, `target`, and `fov_deg` / `fov` /
-  `field_of_view` are probed defensively.
-
-### If the 0.x API breaks
-
-The integration points are intentionally small: `setup(app)`, camera
-read/write, `app.document_data` / `set_document_data`, `on_document_changed`
-and `viewport.flash_status`. If a future IngeTrazo changes them, only those
-small helpers in `igz_tb_scenes.py` need updating.
+The extension is **fully internationalized**. The UI strings are written in
+English in the source code and translated on-the-fly using JSON files in the
+`i18n/` folder. It automatically matches the language set in IngeTrazo
+(PT-BR, EN, ES, DE, FR, IT, ZH).
 
 ---
 
@@ -190,19 +183,17 @@ small helpers in `igz_tb_scenes.py` need updating.
 
 ### Manual (scripts / development)
 
-1. In IngeTrazo, run **Extensões ▸ Abrir pasta de plugins** (or open the
+1. In IngeTrazo, run **Extensions ▸ Open plugins folder** (or open the
    per-user plugins folder: `%APPDATA%\IngeTrazo\plugins\` on Windows,
    `~/.local/share/ingetrazo/plugins/` on Linux).
 2. Create a folder named **`igz_tb_scenes`** inside it.
-3. Copy **`igz_tb_scenes.py`**, the **`icons/`** folder and the **package
-   entry** (`packaging/igz_tb_scenes/__init__.py`, renamed to `__init__.py`)
-   into it.
+3. Copy the **entire contents** of this extension (the `core/`, `i18n/`, and
+   `icons/` folders, plus `__init__.py`) into it.
 4. Restart IngeTrazo. The **Scenes** toolbar appears in the top area and the
-   **Cenas** panel joins the side panels.
+   **Scenes** panel joins the side panels.
 
-> The folder **must** contain an `__init__.py` that loads `igz_tb_scenes.py`
-> (the one in `packaging/igz_tb_scenes/`). A missing or wrong entry point
-> silently produces **no** toolbar and **no** panel.
+> The folder **must** contain the `__init__.py` and the `core/` folder. A
+> missing entry point silently produces **no** toolbar and **no** panel.
 
 ### From the IngeTrazo extension catalog
 
@@ -217,14 +208,14 @@ that archive with `packaging/build_extension.ps1` (Windows) or
 
 ## Usage
 
-1. Move/rotate the camera to the view you want and click **Adicionar Cena
-   Atual**. Repeat for every view.
-2. Open the **Cenas** panel to fine-tune each scene's **Permanência** and
-   **Transição**, choose the **FPS** and the **Interpolação**, and click
-   **Aplicar configuração**.
-3. Click **Tocar** to preview; **Parar** interrupts. Enable **Repetir em
-   loop** for a looping preview.
-4. Click **Exportar Animação**, choose **PNG** or **MP4**, set the size and
+1. Move/rotate the camera to the view you want and click **Add Current Scene**.
+   Repeat for every view.
+2. Open the **Scenes** panel to fine-tune each scene's **Hold** and
+   **Transition**, choose the **FPS** and the **Interpolation**, and click
+   **Apply settings**.
+3. Click **Play** to preview; **Stop** interrupts. Enable **Loop** for a
+   looping preview.
+4. Click **Export Animation**, choose **PNG** or **MP4**, set the size and
    confirm.
 5. Everything is saved with the `.igz`; reopen the file and the scenes come
    back.
@@ -235,14 +226,10 @@ that archive with `packaging/build_extension.ps1` (Windows) or
 
 None of these are required — the extension works as-is.
 
-1. **Translatable labels** — route the toolbar/panel strings through the
-   host's `core.i18n` instead of hard-coded Portuguese.
-2. **`Tool` subclass** — a "Scenes…" entry in the **Extensions** menu with a
+1. **In-viewport timeline** — a scrubber and "add current" shortcut.
+2. **Per-scene easing** — a curve selector per keyframe.
+3. **`Tool` subclass** — a "Scenes…" entry in the **Extensions** menu with a
    shortcut, so the user can reopen the toolbar if it is closed.
-3. **Migrate to `app.add_panel(...)`** for full API compliance (integrate
-   natively with the side tray instead of the heuristic host search).
-4. **Per-scene easing** — a curve selector per keyframe.
-5. **In-viewport timeline** — a scrubber and "add current" shortcut.
 
 ---
 
@@ -263,3 +250,4 @@ This program is distributed in the hope that it will be useful, but
 **without any warranty**; without even the implied warranty of
 **merchantability** or **fitness for a particular purpose**. See the
 GNU General Public License for more details.
+```
