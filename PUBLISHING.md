@@ -1,9 +1,10 @@
 # Publicar no catálogo de Extensões do IngeTrazo
 
-> **Status: v1.1.0 pronta para publicar.** O `.zip` foi reconstruído a partir
-> do pacote refatorado, o `sha256` da ficha foi atualizado e a Release `v1.1.0`
-> (asset `igz_tb_scenes.zip`) é o próximo passo; o catálogo ainda aponta para a
-> `v1.0.0` (pull request <https://github.com/ingelibre/ingetrazo-extensions/pull/55>).
+> **Status: v1.1.0 publicada no GitHub.** O `.zip` foi reconstruído a partir do
+> pacote refatorado, o `sha256` da ficha foi atualizado e a Release `v1.1.0`
+> (assets `igz_tb_scenes.zip` e `igz_tb_scenes.zip.sha256`) foi criada. Falta
+> apenas atualizar a ficha no catálogo, que ainda aponta para a `v1.0.0`
+> (pull request <https://github.com/ingelibre/ingetrazo-extensions/pull/55>).
 
 Este documento (PT) e a seção em inglês mais abaixo descrevem como publicar
 esta extensão no catálogo <https://github.com/ingelibre/ingetrazo-extensions>
@@ -105,10 +106,11 @@ catálogo). Por isso esta extensão, que traz um pacote com módulos, traduçõe
 
 # Publishing to the IngeTrazo extension catalog (EN)
 
-> **Status: v1.1.0 ready to publish.** The `.zip` was rebuilt from the
+> **Status: v1.1.0 published on GitHub.** The `.zip` was rebuilt from the
 > refactored package, the entry's `sha256` was refreshed and the `v1.1.0`
-> Release (asset `igz_tb_scenes.zip`) is the next step; the catalog still points
-> at `v1.0.0` (pull request
+> Release (assets `igz_tb_scenes.zip` and `igz_tb_scenes.zip.sha256`) was
+> created. Only the catalog entry remains to be updated, as it still points at
+> `v1.0.0` (pull request
 > <https://github.com/ingelibre/ingetrazo-extensions/pull/55>).
 
 Everything needed is in place (code, a `.zip` builder, the package entry, the
